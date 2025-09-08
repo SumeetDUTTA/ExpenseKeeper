@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import ApiError from '../utils/ApiError.js';
 import User from '../models/user.js';
 
-export async function auth(req, res, next) {
+async function auth(req, res, next) {
     try {
         const authHeader = req.headers.authorization;
         const token = authHeader.startwith('Bearer ') ? authHeader.slice(7): null;
@@ -18,3 +18,5 @@ export async function auth(req, res, next) {
         next(error);
     }
 }
+
+export default auth;
