@@ -1,9 +1,10 @@
 import forecast from "../mlServices/mlService.js";
 import Expense from "../models/expense.js";
+import ApiError from "../utils/ApiError.js";
 
 export async function predict(req, res, next) {
     try {
-        const horizonDate = req.body.horizonDates || 1;
+        const horizonDates = req.body.horizonDates || 1;
         const rows = await Expense.aggregate([
             { $match: {user: req.user._id} },
             { $group: {
@@ -12,10 +13,15 @@ export async function predict(req, res, next) {
             }},
             { $sort: { _id: 1 }}
         ])
+        if (!rows.length) throw new ApiError(400, 'Not enough data to generate prediction');
         const timeseries = rows.map(r => r.total);
-        const prediction = await forecast(timeseries, horizonDate);
-        res.json({ series: rows, prediction})
+        const prediction = await forecast(timeseries, horizonDates);
+        res.status(200).json({
+            success: true,
+            series: rows.map(r => ({ month: r._id, total: r.total })),
+            prediction
+        });
     } catch (error) {
-        next(error);
+        next(new ApiError(500, 'Prediction failed', error));
     }
 }

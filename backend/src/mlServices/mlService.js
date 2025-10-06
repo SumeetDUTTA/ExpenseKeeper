@@ -13,10 +13,10 @@ async function forecast(timeseries, horizonDates) {
         if(process.env.ML_API_KEY) {
             headers['x-api-key'] = process.env.ML_API_KEY;
         }
-        const {data} = await axios.post(url, {timeseries, horizon: horizonDates}, {headers});
-        return data.forecast;
+        const {data} = await axios.post(url, {timeseries, horizon: horizonDates}, {headers, timeout: 8000});
+        return data.predicted_expense;
     } catch (error) {
-        throw new ApiError('Forecasting failed', error);
+        throw new ApiError(500, 'Forecasting failed', error);
     }
 };
 

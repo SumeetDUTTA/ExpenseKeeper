@@ -1,7 +1,7 @@
 import Expense from '../models/expense.js';
 import ApiError from '../utils/ApiError.js';
 
-export async function getExpenses(req, res, next) {
+async function getExpenses(req, res, next) {
   try {
     const { from, to, category } = req.query;
     const filter = { user: req.user._id };
@@ -16,7 +16,7 @@ export async function getExpenses(req, res, next) {
   }
 }
 
-export async function createExpense(req, res, next) {
+async function createExpense(req, res, next) {
   try {
     const { amount, category, date, note } = req.body;
     if (!amount || !category || !date) {
@@ -34,7 +34,7 @@ export async function createExpense(req, res, next) {
 }
 
 
-export async function deleteExpense(req, res, next) {
+async function deleteExpense(req, res, next) {
   try {
     const { id } = req.params;
     const result = await Expense.deleteOne({ _id: id, user: req.user._id });
@@ -47,7 +47,7 @@ export async function deleteExpense(req, res, next) {
   }
 }
 
-export async function updateExpense(req, res, next) {
+async function updateExpense(req, res, next) {
   try {
     const { id } = req.params;
     const update = req.body;
@@ -64,3 +64,5 @@ export async function updateExpense(req, res, next) {
     next(new ApiError(500, "Error updating expense"));
   }
 }
+
+export { getExpenses, createExpense, deleteExpense, updateExpense };
