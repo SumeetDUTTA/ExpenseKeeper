@@ -1,3 +1,17 @@
 .env
 node_modules
 dist
+
+# Python venv & caches for mlModel
+mlModel/.venv/
+mlModel/__pycache__/
+mlModel/.idea/
+mlModel/.ipynb_checkpoints/
+
+# Python bytecode
+*.pyc
+__pycache__/
+
+# OS files
+.DS_Store
+Thumbs.db
