@@ -46,7 +46,15 @@ export async function forecast(categories, h = 1) {
     try {
         // Try ML prediction first
         const url = `${base.replace(/\/$/, '')}/predict`;
-        const { data: response } = await axios.post(url, { categories, horizon: h }, {
+
+        const payload = {
+            categories,
+            horizon: h,
+            user_total_budget: meta.user_total_budget,
+            user_type: meta.user_type,
+        }
+
+        const { data: response } = await axios.post(url, payload, {
             timeout: 10000,
             headers: { 'Content-Type': 'application/json' }
         });

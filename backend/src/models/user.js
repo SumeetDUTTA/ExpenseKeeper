@@ -5,6 +5,15 @@ const userSchema = new mongoose.Schema({
     name: {type: String, required: true, trim: true},
     email: {type: String, required: true, unique: true, lowercase: true, trim: true},
     password: {type: String, required: true, minlength: 6},
+    monthlyBudget: {type: Number, default: 0},
+    userType: { type: String, enum: [
+        'college_student',
+        'young_professional',
+        'family_moderate',
+        'family_high',
+        'luxury_lifestyle',
+        'senior_retired'
+    ], default: 'college_student' },
 }, { timestamps: true });
 
 userSchema.pre('save', async function(next) {

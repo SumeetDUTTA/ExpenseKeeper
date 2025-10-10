@@ -34,6 +34,8 @@ class MonthlyExpenseData(BaseModel):
 class CategoryBatchData(BaseModel):
     categories: dict[str, list[float]]
     horizon: int
+    user_total_budget: float = 0.0
+    user_type: str = "college_student"
 
 # -----------------------------
 # Feature generator
@@ -67,7 +69,7 @@ def create_features(ts: np.ndarray, month_index: int):
 #------------------------------------------------------------
 # Helper: Forecast single series (in rupees)
 # ------------------------------------------------------------
-def forecast_series(ts: list[float], horizon: int):
+def forecast_series(ts: list[float], horizon: int, user_total_budget: float = 0.0, user_type: str = "college_student"):
     # Handle edge cases
     if not ts or horizon <= 0:
         return [0.0] * horizon
@@ -108,6 +110,31 @@ def forecast_series(ts: list[float], horizon: int):
             'month_total', 'category_ratio',
             'month_num', 'month_sin', 'month_cos'
         ])
+
+        X_df['log_total_budget'] = np.log1p(user_total_budget)
+
+        def budget_cat(val):
+            if val <= 5000:
+                return 'low'
+            elif val <= 10000:
+                return 'moderate'
+            elif val <= 20000:
+                return 'high'
+            elif val <= 40000:
+                return 'very_high'
+            else:
+                return 'luxury'
+        bc = budget_cat(user_total_budget)
+        for cat in ['low', 'moderate', 'high', 'very_high', 'luxurt']:
+            X_df[f'budget_category_{cat}'] = 1 if cat == bc else 0
+
+        user_types = ['college_student', 'young_professional', 'family_moderate', 'family_high', 'luxury_lifestyle', 'senior_retired']
+
+        for ut in user_types:
+            X_df[f'UserType_{ut}'] = 1 if ut == user_type else 0
+        
+        last_amount = ts[-1] if len(ts) > 0 else 0.0
+        X_df['spend_ratio'] = (np.log1p(last_amount) / (np.log1p(user_total_budget) + 1e-9))
 
         for col in FEATURES:
             if col not in X_df.columns:
@@ -155,7 +182,11 @@ async def forecast_batch(data: CategoryBatchData):
         results = {}
         total = np.zeros(data.horizon)
         for category, series in data.categories.items():
-            preds = forecast_series(series, data.horizon)
+            preds = forecast_series(
+                series, data.horizon,
+                user_total_budget=data.user_total_budget,
+                user_type=data.user_type
+            )
             results[category] = preds
             total += np.array(preds)
         

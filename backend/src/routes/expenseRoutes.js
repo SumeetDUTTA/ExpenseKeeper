@@ -10,7 +10,7 @@ router.use(auth);
 
 router.get("/", getExpenses);
 router.post("/", validate(createExpenseSchema), createExpense);
-router.put("/:id", validate(updateExpenseSchema), updateExpense);
+router.patch("/:id", validate(updateExpenseSchema), updateExpense);
 router.delete("/:id", validate(idParamSchema), deleteExpense);
 
 export default router;

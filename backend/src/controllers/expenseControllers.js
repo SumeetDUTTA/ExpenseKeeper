@@ -37,8 +37,8 @@ async function createExpense(req, res, next) {
 async function deleteExpense(req, res, next) {
   try {
     const { id } = req.params;
-    const result = await Expense.deleteOne({ _id: id, user: req.user._id });
-    if (result.deletedCount === 0) {
+    const result = await Expense.findOneAndDelete({ _id: id, user: req.user._id });
+    if (!result) {
       return next(new ApiError(404, "Expense not found"));
     }
     res.status(200).json({ message: "Expense deleted successfully!" });
@@ -51,7 +51,7 @@ async function updateExpense(req, res, next) {
   try {
     const { id } = req.params;
     const update = req.body;
-    const updatedExpense = await Expense.findOneAndUpdate(
+    const updatedExpense = await Expense.findByIdAndUpdate(
       {_id: id, user: req.user._id},
       update,
       { new: true }

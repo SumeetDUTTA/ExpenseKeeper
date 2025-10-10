@@ -6,6 +6,12 @@ export async function predict(req, res, next) {
     try {
         const horizon = Number(req.body.horizonDates) || 1;
 
+        const user = req.user || {};
+        const user_total_budget = req.body.user_total_budget || user.monthlyBudget || 0;
+        const user_type = req.body.user_type || user.user_type || 'college_student';
+
+        result = await forecast(categories, horizon, { user_total_budget, user_type });
+
         // Get user's expense data grouped by month and category
         const rows = await Expense.aggregate([
             { $match: { user: req.user._id } },
