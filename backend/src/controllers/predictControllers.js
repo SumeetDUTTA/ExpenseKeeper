@@ -1,5 +1,6 @@
 import { forecast } from "../mlServices/mlService.js";
 import Expense from "../models/expense.js";
+import redisClient from "../utils/redisClient.js";
 import  { notFound, errorHandler} from "../middleware/errorHandler.js";
 
 export async function predict(req, res, next) {
@@ -13,6 +14,14 @@ export async function predict(req, res, next) {
         const user = req.user || {};
         const user_total_budget = req.body.user_total_budget || user.monthlyBudget || 0;
         const user_type = req.body.user_type || user.user_type || 'college_student';
+
+        const cacheKey = `forecast:${user._id}:${horizon}:${user_total_budget}:${user_type}`;
+
+        // Check Redis cache
+        const cachedResult = await redisClient.get(cacheKey);
+        if (cachedResult) {
+            return res.status(200).json(JSON.parse(cachedResult));
+        }
 
         // Get user's expense data grouped by month and category
         const rows = await Expense.aggregate([
@@ -97,7 +106,7 @@ export async function predict(req, res, next) {
         // Log the prediction method used
         const method = predictionResult.predictionMethod || 'unknown';
 
-        res.status(200).json({
+        const result = {
             success: true,
             message: 'Prediction generated successfully',
             user_metadata: {
@@ -108,8 +117,15 @@ export async function predict(req, res, next) {
             prediction_by_category: predictionResult.categories,
             total_prediction: predictionResult.total,
             predictionMethod: method,
+        };
+
+        // Store result in Redis cache
+        await redisClient.set(cacheKey, JSON.stringify(result), {
+            EX: 3600 // Cache for 1 hour
         });
 
+        res.status(200).json(result);
+        
     } catch (error) {
         console.error('Prediction error:', error);
         if (error instanceof errorHandler) {
