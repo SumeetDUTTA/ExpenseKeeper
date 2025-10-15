@@ -40,7 +40,7 @@ function statisticalFallback(categories, horizon = 1) {
 }
 
 // Main prediction function - SIMPLIFIED
-export async function forecast(categories, h = 1) {
+export async function forecast(categories, h = 1, meta = {}) {
     console.log('🤖 Starting ML prediction...');
     
     try {
@@ -50,8 +50,8 @@ export async function forecast(categories, h = 1) {
         const payload = {
             categories,
             horizon: h,
-            user_total_budget: meta.user_total_budget,
-            user_type: meta.user_type,
+            user_total_budget: meta.user_total_budget || 0,
+            user_type: meta.user_type || 'college_student',
         }
 
         const { data: response } = await axios.post(url, payload, {
@@ -74,7 +74,6 @@ export async function forecast(categories, h = 1) {
             
             // Simple approach: trust the ML model with basic bounds
             const rawMean = predicted.reduce((a, b) => a + b, 0) / predicted.length;
-            console.log(`📊 ${cat}: ML predicted ₹${Math.round(rawMean)}/month`);
             
             // Just ensure values are positive and reasonable (not more than 50K per category)
             const cleaned = predicted.map(v => clamp(Math.round(v), 0, 50000));
@@ -84,14 +83,17 @@ export async function forecast(categories, h = 1) {
                 recomputedTotal[i] = (recomputedTotal[i] || 0) + v;
             });
         }
+        const userTotalBudget = meta.user_total_budget || 0;
+        const userType = meta.user_type || 'college_student';
         
         const totalAvg = recomputedTotal.reduce((a, b) => a + b, 0) / recomputedTotal.length;
-        console.log(`💰 Total predicted: ₹${Math.round(totalAvg)}/month`);
         
         return {
             categories: cleanCats,
-            total: recomputedTotal,
-            predictionMethod: 'ml_model'
+            total: totalAvg,
+            predictionMethod: 'ml_model',
+            user_total_budget: userTotalBudget,
+            user_type: userType
         };
         
     } catch (err) {

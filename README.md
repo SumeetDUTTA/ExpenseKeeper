@@ -2,7 +2,7 @@
 
 ## Overview
 
-Smart Expense Tracker is an academic project aimed at helping users efficiently manage and analyze their expenses. Leveraging predictive analytics, it provides actionable insights to empower smarter financial decisions.
+Smart Expense Tracker is a web application designed to help users monitor, categorize, and analyze their expenses. By integrating predictive analytics, the platform offers personalized insights and forecasts to support better financial planning.
 
 ## Technologies Used
 
@@ -14,28 +14,31 @@ Smart Expense Tracker is an academic project aimed at helping users efficiently 
 
 ## Getting Started
 
-1. Clone the repository (access restricted to project members).
-2. Install dependencies for both frontend and backend.
-3. Configure environment variables for database and authentication.
-4. Launch the backend and frontend servers.
+1. Clone the repository (access is limited to project members).
+2. Install dependencies for both frontend and backend:
+    - `npm install` in `/client` and `/server` directories.
+3. Set up environment variables for MongoDB connection and JWT secret.
+4. Start the backend server: `npm start` in `/server`.
+5. Start the frontend server: `npm start` in `/client`.
 
 ## Demo
 
 ![Expense Dashboard Screenshot](assets/dashboard.png)
 
-A web-based platform for managing expenses, enhanced with machine learning to deliver predictive financial insights.
+The application provides a user-friendly dashboard for tracking expenses and visualizing spending trends, enhanced with machine learning-driven predictions.
 
 ## Core Features
 
-- **User Authentication:** Secure registration and login.
-- **Expense Dashboard:** Record daily expenses with details like amount, category, date, and notes.
-- **Expense Categorization:** Organize spending by categories such as food, travel, utilities, entertainment, and more.
-- **Data Visualization:** Interactive charts to display monthly and weekly spending patterns.
+- **User Authentication:** Secure sign-up and login functionality.
+- **Expense Management:** Add, edit, and delete expenses with details such as amount, category, date, and notes.
+- **Categorization:** Organize expenses by categories like food, travel, utilities, entertainment, and more.
+- **Data Visualization:** Interactive charts for monthly and weekly spending analysis.
 
-## Machine Learning Integration
+## Predictive Analytics
 
-- **Expense Prediction:** Forecast future expenses using historical data.
-- **Budget Forecasting:** Receive alerts when projected spending may exceed your budget.
-- **Anomaly Detection:** Identify and highlight unusual or unexpected spending patterns.
+- **Expense Prediction:** Estimate future expenses based on historical data.
+- **Budget Alerts:** Notifications when predicted spending approaches or exceeds set budgets.
+- **Anomaly Detection:** Highlight unusual or unexpected spending patterns for review.
 
-> **Note:** This repository is private and intended only for project collaborators.
+> **Note:** This repository is private and intended solely for project collaborators.
+

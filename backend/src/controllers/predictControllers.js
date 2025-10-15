@@ -1,16 +1,18 @@
 import { forecast } from "../mlServices/mlService.js";
 import Expense from "../models/expense.js";
-import ApiError from "../utils/ApiError.js";
+import  { notFound, errorHandler} from "../middleware/errorHandler.js";
 
 export async function predict(req, res, next) {
     try {
         const horizon = Number(req.body.horizonDates) || 1;
 
+        if (horizon < 1 || horizon > 12) {
+            throw new errorHandler(400, 'horizonDates must be between 1 and 12');
+        }
+
         const user = req.user || {};
         const user_total_budget = req.body.user_total_budget || user.monthlyBudget || 0;
         const user_type = req.body.user_type || user.user_type || 'college_student';
-
-        result = await forecast(categories, horizon, { user_total_budget, user_type });
 
         // Get user's expense data grouped by month and category
         const rows = await Expense.aggregate([
@@ -26,7 +28,7 @@ export async function predict(req, res, next) {
         ]);
 
         if (!rows.length) {
-            throw new ApiError(400, 'Not enough data to generate prediction');
+            throw new errorHandler(400, 'Not enough data to generate prediction');
         }
 
         // Organize data by categories and months
@@ -51,13 +53,11 @@ export async function predict(req, res, next) {
 
         // Simple check: if I have at least 3 months of data, use ML; otherwise use simple average
         const MIN_MONTHS = 3;
-        let result;
+        let predictionResult;
 
         if (uniqueMonths.length >= MIN_MONTHS) {
-            console.log(`📊 Using ML prediction (${uniqueMonths.length} months of data)`);
-            result = await forecast(categoryMap, horizon);
+            predictionResult = await forecast(categoryMap, horizon, { user_total_budget, user_type });
         } else {
-            console.log(`📊 Using simple average (only ${uniqueMonths.length} months of data)`);
             // Simple fallback: use recent averages with small growth
             const results = {};
             let totalPredictions = [];
@@ -74,7 +74,7 @@ export async function predict(req, res, next) {
                 totalPredictions[i] = Object.values(results).reduce((sum, catArray) => sum + catArray[i], 0);
             }
             
-            result = {
+            predictionResult = {
                 categories: results,
                 total: totalPredictions,
                 predictionMethod: 'simple_average'
@@ -82,8 +82,8 @@ export async function predict(req, res, next) {
         }
 
         // Validate result
-        if (!result || !result.categories || !result.total) {
-            throw new ApiError(500, 'Prediction failed to generate valid results');
+        if (!predictionResult || !predictionResult.categories || !predictionResult.total) {
+            throw new errorHandler(500, 'Prediction failed to generate valid results');
         }
 
         // Create summary of input data
@@ -95,23 +95,26 @@ export async function predict(req, res, next) {
         });
 
         // Log the prediction method used
-        const method = result.predictionMethod || 'unknown';
-        console.log(`🎯 Prediction method: ${method}`);
+        const method = predictionResult.predictionMethod || 'unknown';
 
         res.status(200).json({
             success: true,
             message: 'Prediction generated successfully',
+            user_metadata: {
+                budget: user_total_budget,
+                type: user_type
+            },
             input_summary,
-            prediction_by_category: result.categories,
-            total_prediction: result.total,
+            prediction_by_category: predictionResult.categories,
+            total_prediction: predictionResult.total,
             predictionMethod: method,
         });
 
     } catch (error) {
         console.error('Prediction error:', error);
-        if (error instanceof ApiError) {
+        if (error instanceof errorHandler) {
             return next(error);
         }
-        next(new ApiError(500, 'Prediction failed', error));
+        next(new errorHandler(500, 'Prediction failed', error));
     }
 }
