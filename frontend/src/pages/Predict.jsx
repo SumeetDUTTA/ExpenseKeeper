@@ -1,311 +1,152 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, {useState} from "react";
 import api from "../api";
-import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Brush } from "recharts";
 
-function parseDate(s) {
-  const d = s ? new Date(s) : new Date()
-  if (Number.isNaN(d.getTime())) return null
-  return d
-}
-
-// format YYYY-MM for monthly
-function formatMonthKey(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-}
-
-// format day key YYYY-MM-DD
-function formatDayKey(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
-
-// get ISO week number + year to create a week bucket key (YYYY-Www)
-function getWeekKey(date) {
-  // copy date and set to nearest Thursday (ISO week algorithm)
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
-  const dayNum = d.getUTCDay() || 7
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum)
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
-  const weekNo = Math.ceil(((d - yearStart) / 86400000 + 1) / 7)
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`
-}
-
-// convert period key to readable label
-function keyToLabel(key, agg) {
-  if (!key) return ''
-  if (agg === 'monthly') {
-    const [y, m] = key.split('-')
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    return `${monthNames[Number(m) - 1]} ${y}`
+function normalizeTotalPrediction(tp) {
+  try {
+    if (Array.isArray(tp)) return tp
+    if (typeof tp === 'number') return [tp]
+    if (tp && typeof tp === 'object') {
+      const keys = Object.keys(tp)
+      const numericKeys = keys.every(k => !Number.isNaN(Date.parse(k)) || !isNaN(Number(k)))
+      if (numericKeys) {
+        return keys
+          .slice()
+          .sort((a, b) => {
+            const da = Date.parse(a)
+            const db = Date.parse(b)
+            if (!Number.isNaN(da) && !Number.isNaN(db)) return da - db
+            return (Number(a) || 0) - (Number(b) || 0)
+          })
+          .map(k => tp[k])
+      }
+      return Object.values(tp)
+    }
+  } catch (err) {
+    console.error('normalizeTotalPrediction error:', err, tp)
   }
-  if (agg === 'weekly') {
-    return key.replace('-', ' ')
-  }
-  // daily
-  return key
+  return [] // <-- GUARANTEED fallback
 }
-
-// clamp a date to midnight (for range inclusivity)
-function clampDate(date) {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
-
-// subtract months helper
-function subMonths(date, months) {
-  const d = new Date(date)
-  d.setMonth(d.getMonth() - months)
-  return d
-}
-
-/* ---------- Component ---------- */
 
 export default function Predict() {
-  const [expenses, setExpenses] = useState([]) // raw expenses from backend
+  const [horizon, setHorizon] = useState(1)
+  const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [showBreakdown, setShowBreakdown] = useState(false)
 
-  // UI controls
-  const [preset, setPreset] = useState('3M') // 1M,3M,6M,1Y,All
-  const [agg, setAgg] = useState('monthly') // daily | weekly | monthly
-  const [customStart, setCustomStart] = useState('')
-  const [customEnd, setCustomEnd] = useState('')
-
-  // Fetch expenses once on mount
-  useEffect(() => {
-    async function load() {
-      setLoading(true)
-      setError(null)
-      try {
-        const res = await api.get('/expenses')
-        // expect res.data to be an array of expenses with { amount, date, category, note, _id }
-        if (Array.isArray(res.data)) setExpenses(res.data)
-        else if (res.data?.expenses && Array.isArray(res.data.expenses)) setExpenses(res.data.expenses)
-        else {
-          // try to handle backend that returns wrapped object
-          const arr = Array.isArray(res.data) ? res.data : []
-          setExpenses(arr)
-        }
-      } catch (e) {
-        setError(e.response?.data?.message || e.message || 'Failed to load expenses')
-        setExpenses([])
-      } finally {
-        setLoading(false)
-      }
+  async function submit(e) {
+    e && e.preventDefault()
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await api.post('/predict', { horizonDates: Number(horizon) })
+      console.log('predict response:', res.data)
+      setResult(res.data)
+      setShowBreakdown(false)
+    } catch (e) {
+      setError(e.response?.data?.message || e.message)
+      setResult(null)
+    } finally {
+      setLoading(false)
     }
-    load()
-  }, [])
+  }
 
-  /* ---------- Compute range (startDate, endDate) based on preset or custom ---------- */
-  const { startDate, endDate } = useMemo(() => {
-    const now = new Date()
-    let end = customEnd ? parseDate(customEnd) : now
-    if (!end) end = now
-    // ensure time component is at end of day
-    end.setHours(23, 59, 59, 999)
+  // Defensive normalization with try/catch/fallback
+  const totalPredRaw = result?.total_prediction
+  let totalPredArray = []
+  try {
+    totalPredArray = normalizeTotalPrediction(totalPredRaw) || []
+  } catch (err) {
+    console.error('Error normalizing total_prediction:', err, totalPredRaw)
+    totalPredArray = []
+  }
 
-    let start = null
-    if (customStart) {
-      start = parseDate(customStart)
-    } else {
-      switch (preset) {
-        case '1M':
-          start = subMonths(now, 1)
-          break
-        case '3M':
-          start = subMonths(now, 3)
-          break
-        case '6M':
-          start = subMonths(now, 6)
-          break
-        case '1Y':
-          start = subMonths(now, 12)
-          break
-        case 'All':
-        default:
-          // earliest expense date if available, else 1 year back
-          const dates = expenses.map(e => parseDate(e.date)).filter(Boolean)
-          start = dates.length ? new Date(Math.min(...dates.map(d => d.getTime()))) : subMonths(now, 12)
-      }
-    }
-    if (!start) start = subMonths(now, 3)
-    // clamp to start of day
-    start = clampDate(start)
-    return { startDate: start, endDate: end }
-  }, [preset, customStart, customEnd, expenses])
+  // ALWAYS use a safe array fallback before .map
+  const chartData = (totalPredArray || []).map((v, i) => ({ name: `T+${i + 1}`, value: v }))
 
-  /* ---------- Filter and group expenses by aggregation ---------- */
-  const groupedData = useMemo(() => {
-    // Ensure we have array
-    const list = Array.isArray(expenses) ? expenses : []
+  const totalDisplay = (Array.isArray(totalPredArray) && totalPredArray.length > 0)
+    ? totalPredArray.reduce((s, x) => s + (Number(x) || 0), 0)
+    : (typeof totalPredRaw === 'number' ? totalPredRaw : null)
 
-    // filter within inclusive range
-    const filtered = list
-      .map(it => ({ ...it, parsedDate: parseDate(it.date) }))
-      .filter(it => it.parsedDate)
-      .filter(it => {
-        const t = it.parsedDate.getTime()
-        return t >= startDate.getTime() && t <= endDate.getTime()
-      })
+  const byCategory = result?.prediction_by_category || {}
 
-    // reduce into map key -> sum
-    const map = new Map()
-    filtered.forEach(it => {
-      const dt = it.parsedDate
-      let key
-      if (agg === 'monthly') key = formatMonthKey(dt)
-      else if (agg === 'weekly') key = getWeekKey(dt)
-      else key = formatDayKey(dt)
-
-      const prev = map.get(key) || 0
-      map.set(key, prev + (Number(it.amount) || 0))
-    })
-
-    // sort keys chronologically
-    const keys = Array.from(map.keys()).sort((a, b) => {
-      // convert keys to Date for compare
-      if (agg === 'monthly') {
-        // a: YYYY-MM
-        const [ay, am] = a.split('-').map(Number)
-        const [by, bm] = b.split('-').map(Number)
-        if (ay !== by) return ay - by
-        return am - bm
-      }
-      if (agg === 'weekly') {
-        // a: YYYY-Www -> parse year and week number
-        const [ay, aw] = a.split('-W').map(Number)
-        const [by, bw] = b.split('-W').map(Number)
-        if (ay !== by) return ay - by
-        return aw - bw
-      }
-      // daily YYYY-MM-DD
-      return new Date(a) - new Date(b)
-    })
-
-    const data = keys.map(k => ({ name: keyToLabel(k, agg), value: map.get(k) || 0, rawKey: k }))
-    return { data, filtered, map }
-  }, [expenses, startDate, endDate, agg])
-
-  // chartData safe
-  const chartData = Array.isArray(groupedData.data) ? groupedData.data : []
-
-  // summary numbers
-  const totalInRange = chartData.reduce((s, r) => s + (Number(r.value) || 0), 0)
-  const periodsCount = chartData.length || 1
-  const avgPerPeriod = Math.round((totalInRange / periodsCount) || 0)
-
-  /* ---------- UI ---------- */
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-semibold">Expense history</h2>
-        <div className="text-sm text-gray-500">Visualize your spend over time</div>
-      </div>
+      <h2 className="text-xl font-semibold">Prediction</h2>
 
-      {/* Controls */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm mb-4 flex flex-col md:flex-row gap-4 items-start md:items-center">
-        <div className="flex gap-2 flex-wrap">
-          <button onClick={() => { setPreset('1M'); setCustomStart(''); setCustomEnd('') }} className={`px-3 py-1 rounded ${preset === '1M' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>1M</button>
-          <button onClick={() => { setPreset('3M'); setCustomStart(''); setCustomEnd('') }} className={`px-3 py-1 rounded ${preset === '3M' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>3M</button>
-          <button onClick={() => { setPreset('6M'); setCustomStart(''); setCustomEnd('') }} className={`px-3 py-1 rounded ${preset === '6M' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>6M</button>
-          <button onClick={() => { setPreset('1Y'); setCustomStart(''); setCustomEnd('') }} className={`px-3 py-1 rounded ${preset === '1Y' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>1Y</button>
-          <button onClick={() => { setPreset('All'); setCustomStart(''); setCustomEnd('') }} className={`px-3 py-1 rounded ${preset === 'All' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>All</button>
-        </div>
+      <form onSubmit={submit} className="flex items-center gap-2 mb-4">
+        <label>Horizon (months):</label>
+        <input
+          type="number"
+          min="1"
+          max="12"
+          value={horizon}
+          onChange={(e) => setHorizon(e.target.value)}
+          className="p-2 border rounded w-20"
+        />
+        <button className="bg-indigo-600 text-white px-3 py-1 rounded">Run</button>
+      </form>
 
-        <div className="flex items-center gap-2 ml-auto">
-          <label className="text-sm text-gray-600">Aggregation</label>
-          <select value={agg} onChange={e => setAgg(e.target.value)} className="p-1 border rounded">
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-        </div>
+      {loading && <div>Generating…</div>}
+      {error && <div className="text-red-600">{error}</div>}
 
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Custom range</label>
-          <input type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); setPreset('') }} className="p-1 border rounded" />
-          <input type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setPreset('') }} className="p-1 border rounded" />
-          <button onClick={() => { setCustomStart(''); setCustomEnd(''); setPreset('3M') }} className="px-2 py-1 bg-gray-100 rounded">Reset</button>
-        </div>
-      </div>
-
-      {/* Chart + summary */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <div className="text-sm text-gray-500">Total in range</div>
-            <div className="text-2xl font-bold mt-1">₹{totalInRange}</div>
-            <div className="text-xs text-gray-500 mt-1">Avg per {agg === 'daily' ? 'day' : agg === 'weekly' ? 'week' : 'month'}: ₹{avgPerPeriod}</div>
-          </div>
-
-          {/* Chart wrapper with explicit height so ResponsiveContainer can calculate */}
-          <div style={{ width: '65%', height: 260, minWidth: 0 }}>
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => `₹${value}`} />
-                  <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} dot />
-                  <Brush dataKey="name" height={30} stroke="#8884d8" />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-gray-500">No data for the chosen range</div>
-            )}
-          </div>
-        </div>
-
-        {/* small legend / hint */}
-        <div className="text-xs text-gray-500">Tip: change aggregation to see monthly/weekly/daily trends.</div>
-      </div>
-
-      {/* Recent items */}
-      <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-white p-4 rounded-2xl shadow-sm">
-          <div className="text-sm text-gray-500 mb-3">Recent expenses (in selected range)</div>
-          {loading ? <div>Loading…</div> : (
-            groupedData.filtered.length === 0 ? (
-              <div className="text-gray-500">No expenses in selected range</div>
-            ) : (
-              <div className="divide-y">
-                {groupedData.filtered.slice().sort((a, b) => b.parsedDate - a.parsedDate).slice(0, 20).map(it => (
-                  <div key={it._id || (it.parsedDate && it.parsedDate.getTime())} className="py-3 flex justify-between items-center">
-                    <div>
-                      <div className="font-medium">{it.category}</div>
-                      <div className="text-xs text-gray-500">{it.parsedDate.toLocaleDateString()} · {it.note}</div>
-                    </div>
-                    <div className="text-right font-semibold">₹{it.amount}</div>
-                  </div>
-                ))}
+      {result && (
+        <div className="space-y-4">
+          <div className="bg-white p-4 rounded shadow flex items-center justify-between">
+            <div>
+              <div className="text-sm text-gray-500">Total prediction</div>
+              <div className="text-2xl font-bold mt-1">
+                {totalDisplay != null ? `₹${totalDisplay}` : '—'}
               </div>
-            )
-          )}
-        </div>
+            </div>
+          </div>
 
-        <div className="bg-white p-4 rounded-2xl shadow-sm">
-          <div className="text-sm text-gray-500 mb-3">Period breakdown</div>
-          {chartData.length === 0 ? <div className="text-gray-500">No data</div> : (
-            <div className="overflow-auto">
-              <table className="w-full text-left">
-                <thead className="bg-gray-100"><tr><th className="p-2">Period</th><th className="p-2">Total</th></tr></thead>
-                <tbody>
-                  {chartData.map(row => (
-                    <tr key={row.name} className="border-t">
-                      <td className="p-2">{row.name}</td>
-                      <td className="p-2">₹{row.value}</td>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowBreakdown(s => !s)}
+              className="text-sm bg-gray-100 px-3 py-1 rounded"
+            >
+              {showBreakdown ? 'Hide breakdown by category' : 'Show breakdown by category'}
+            </button>
+            <div className="text-sm text-gray-500">
+              Breakdown is hidden by default. Click the button to view category-level predictions.
+            </div>
+          </div>
+
+          {showBreakdown && (
+            <div className="bg-white p-4 rounded shadow">
+              <h3 className="font-medium mb-2">Prediction by category</h3>
+
+              <div className="overflow-auto">
+                <table className="w-full text-left mt-2">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="p-2">Category</th>
+                      {(chartData.length > 0 ? chartData : [{ name: `T+1` }]).map(c => (
+                        <th key={c.name} className="p-2">{c.name}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+
+                  <tbody>
+                    {Object.keys(byCategory).length === 0 ? (
+                      <tr className="border-t"><td className="p-2" colSpan={2}>No category predictions</td></tr>
+                    ) : (
+                      Object.entries(byCategory).map(([cat, arr]) => (
+                        <tr key={cat} className="border-t">
+                          <td className="p-2">{cat}</td>
+                          {Array.isArray(arr) ? arr.map((v, i) => <td key={i} className="p-2">₹{v}</td>)
+                           : <td className="p-2">{String(arr)}</td>}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
-      </div>
-
-      {/* debug error */}
-      {error && <div className="text-red-600 mt-4">{String(error)}</div>}
+      )}
     </div>
   )
 }

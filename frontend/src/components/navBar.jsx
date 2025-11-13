@@ -23,6 +23,7 @@ export default function NavBar() {
 				<nav className="flex items-center gap-4">
 					<Link to="/" className="text-sm text-gray-600 hover:text-gray-900">Home</Link>
 					<Link to="/expenses" className="text-sm text-gray-600 hover:text-gray-900">Expenses</Link>
+					<Link to="/expense-history" className="text-sm text-gray-600 hover:text-gray-900">SpendPulse</Link>
 					<Link to="/predict" className="text-sm text-gray-600 hover:text-gray-900">Predict</Link>
 
 					{user ? (

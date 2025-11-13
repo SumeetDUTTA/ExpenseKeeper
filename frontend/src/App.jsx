@@ -7,6 +7,7 @@ import Predict from "./pages/Predict";
 import Profile from "./pages/Profile";
 import { useAuth } from "./contexts/authContext.jsx";
 import NavBar from "./components/navBar.jsx";
+import ExpenseHistory from "./pages/expenseHistory.jsx";
 
 function Private({ children }) {
   const { token } = useAuth();
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/expenses" element={<Private><Expenses /></Private>} />
+          <Route path="/expense-history" element={<Private><ExpenseHistory /></Private>} />
           <Route path="/predict" element={<Private><Predict /></Private>} />
           <Route path="/profile" element={<Private><Profile /></Private>} />
         </Routes>
