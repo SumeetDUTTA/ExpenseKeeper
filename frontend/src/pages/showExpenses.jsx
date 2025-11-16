@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 
 import api from '../lib/api'
 import ExpenseForm from '../components/expenseForm'
+import '../styles/showExpenses.css'
 
 /* ---------- Helpers (same as ExpenseHistory) ---------- */
 function parseDate(s) {
@@ -206,102 +207,111 @@ export default function ShowExpenses() {
 
   /* ---------- UI ---------- */
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Expenses</h2>
-        <div className="flex items-center gap-2">
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search category, note, amount" className="p-2 border rounded w-64" />
-          <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="p-2 border rounded">
+    <div className="expense-page-container">
+      <div className="header">
+        <h2 className='page-title'>Expenses</h2>
+        <div className="search-category-box" role="search" aria-label="Search expenses">
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)} className="search-category-input-box"
+            placeholder="Search category, note or amount"
+            aria-label="Search category, note or amount"
+          />
+          <select
+            value={categoryFilter}
+            onChange={e => setCategoryFilter(e.target.value)} className="search-category-dropdown"
+            aria-label="Filter by category"
+          >
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <button onClick={() => navigate('/add-expense')} className="px-3 py-1 bg-indigo-600 text-white rounded">Add Expense</button>
         </div>
       </div>
 
       {/* Analytics panel (toggleable) */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <div className="text-sm text-gray-500">SpendPulse — expense history</div>
-            <div className="text-lg font-semibold">Analyze your spending</div>
-          </div>
+      <div className="analytical-card-container">
+        <div className="card-body" role="region" aria-label="Analytics">
+          <div className="spend-plus">SpendPulse — expense history</div>
+          <div className="analyze-spending">Analyze your spending</div>
 
-          <div className="flex items-center gap-2">
+          <div className="analytics-toggle-button">
             <button onClick={() => setAnalyticsOpen(a => !a)} className="px-3 py-1 border rounded">
               {analyticsOpen ? 'Hide analytics' : 'Show analytics'}
             </button>
-            <div className="text-sm text-gray-500">Range & aggregation</div>
+            <div className="range-aggregation-label">Range & aggregation</div>
           </div>
-        </div>
 
-        {analyticsOpen && (
-          <>
-            {/* Controls */}
-            <div className="flex flex-col md:flex-row gap-3 items-start md:items-center mb-4">
-              <div className="flex gap-2 flex-wrap">
-                <button onClick={() => { setPreset('1M'); setCustomStart(''); setCustomEnd('') }} className={`px-3 py-1 rounded ${preset === '1M' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>1M</button>
-                <button onClick={() => { setPreset('3M'); setCustomStart(''); setCustomEnd('') }} className={`px-3 py-1 rounded ${preset === '3M' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>3M</button>
-                <button onClick={() => { setPreset('6M'); setCustomStart(''); setCustomEnd('') }} className={`px-3 py-1 rounded ${preset === '6M' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>6M</button>
-                <button onClick={() => { setPreset('1Y'); setCustomStart(''); setCustomEnd('') }} className={`px-3 py-1 rounded ${preset === '1Y' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>1Y</button>
-                <button onClick={() => { setPreset('All'); setCustomStart(''); setCustomEnd('') }} className={`px-3 py-1 rounded ${preset === 'All' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>All</button>
+          {analyticsOpen && (
+            <div className="analytical-controls-container">
+              <div className="preset-button-containers" role="tablist" aria-label="Time presets">
+                {['1M', '3M', '6M', '1Y', 'All'].map(p => (
+                  <button
+                    key={p}
+                    onClick={() => { setPreset(p); setCustomStart(''); setCustomEnd('') }}
+                    className={preset === p ? 'preset-button active' : 'preset-button'}
+                  >{p}</button>
+                ))}
               </div>
 
-              <div className="ml-auto flex items-center gap-2">
-                <label className="text-sm text-gray-600">Aggregation</label>
-                <select value={agg} onChange={e => setAgg(e.target.value)} className="p-1 border rounded">
+              <div className="aggregration" style={{ marginBottom: 10 }}>
+                <label style={{ marginRight: 8 }}>Aggregation:</label>
+                <select value={agg} onChange={e => setAgg(e.target.value)} className="aggregation-dropdown" aria-label="Aggregation">
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
                   <option value="monthly">Monthly</option>
                 </select>
               </div>
 
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-600">Custom range</label>
-                <input type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); setPreset('') }} className="p-1 border rounded" />
-                <input type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setPreset('') }} className="p-1 border rounded" />
-                <button onClick={() => { setCustomStart(''); setCustomEnd(''); setPreset('3M') }} className="px-2 py-1 bg-gray-100 rounded">Reset</button>
+              <div className="custom-date-range" aria-label="Custom date range">
+                <label style={{ color: '#6b7280', fontSize: 13 }}>Custom range:</label>
+                <input type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); setPreset('') }} className="custom-start-date" aria-label="Start date" />
+                <input type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setPreset('') }} className="custom-end-date" aria-label="End date" />
+                <button onClick={() => { setCustomStart(''); setCustomEnd(''); setPreset('3M') }} className="reset-button">Reset</button>
               </div>
-            </div>
+              <div className="analytical-chart-summary-container">
+                <div className="summary-card-body" aria-hidden={loading}>
+                  <div className="spent-label">Total spent</div>
+                  <div className="spent-amount">
+                    ₹{totalInRange.toFixed(2)}
+                  </div>
+                  <div className="average-card-body">
+                    <div className="average-label">
+                      Avg per {agg === 'daily' ? 'day' : agg === 'weekly' ? 'week' : 'month'}: ₹{avgPerPeriod.toFixed(2)}
+                    </div>
+                  </div>
 
-            {/* Chart + summary */}
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1">
-                <div className="bg-white p-4 rounded-2xl shadow-sm mb-4">
-                  <div className="text-sm text-gray-500">Total in range</div>
-                  <div className="text-2xl font-bold mt-1">₹{totalInRange}</div>
-                  <div className="text-xs text-gray-500 mt-1">Avg per {agg === 'daily' ? 'day' : agg === 'weekly' ? 'week' : 'month'}: ₹{avgPerPeriod}</div>
+                  <div style={{ width: '100%', height: 300 }} className="chart-container" aria-label="Spending chart">
+                    {loading ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                        Loading…
+                      </div>
+                    ) : chartData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip formatter={(v) => `₹${v}`} />
+                          <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} dot />
+                          <Brush dataKey="name" height={30} stroke="#8884d8" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="no-data">No data for chosen range</div>
+                    )}
+                  </div>
                 </div>
 
-                <div style={{ width: '100%', height: 260, minWidth: 0 }} className="bg-white p-4 rounded-2xl shadow-sm">
-                  {chartData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip formatter={(v) => `₹${v}`} />
-                        <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} dot />
-                        <Brush dataKey="name" height={30} stroke="#8884d8" />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-gray-500">No data for chosen range</div>
-                  )}
-                </div>
-              </div>
-
-              <div className="w-full lg:w-80 space-y-4">
-                <div className="bg-white p-4 rounded-2xl shadow-sm">
-                  <div className="text-sm text-gray-500">Period breakdown</div>
-                  {chartData.length === 0 ? <div className="text-gray-500 mt-2">No data</div> : (
-                    <div className="overflow-auto mt-2" style={{ maxHeight: 200 }}>
-                      <table className="w-full text-left">
-                        <thead className="bg-gray-100"><tr><th className="p-2">Period</th><th className="p-2">Total</th></tr></thead>
+                <div className="period-breakdown-container" aria-hidden={loading}>
+                  <div className="breakdown-title">Period breakdown</div>
+                  {chartData.length === 0 ? <div className="no-data">No data</div> : (
+                    <div className="period-breakdown" style={{ maxHeight: 200, overflow: 'auto' }}>
+                      <table className="breakdown-table" role="table" aria-label="Period totals">
+                        <thead className="thead-class"><tr><th className="th">Period</th><th className="th">Total</th></tr></thead>
                         <tbody>
                           {chartData.map(row => (
-                            <tr key={row.name} className="border-t">
-                              <td className="p-2">{row.name}</td>
-                              <td className="p-2">₹{row.value}</td>
+                            <tr key={row.name} className="table-row">
+                              <td className="td">{row.name}</td>
+                              <td className="td">₹{row.value}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -310,17 +320,17 @@ export default function ShowExpenses() {
                   )}
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl shadow-sm">
-                  <div className="text-sm text-gray-500">Recent in range</div>
-                  {grouped.filtered.length === 0 ? <div className="text-gray-500 mt-2">No expenses</div> : (
-                    <div className="divide-y mt-2">
+                <div className="recent-range" aria-hidden={loading}>
+                  <div className="recent-range-title">Recent range</div>
+                  {grouped.filtered.length === 0 ? <div className="no-data">No expenses</div> : (
+                    <div className="recent-expenses-list" style={{ maxHeight: 200, overflowY: 'auto' }}>
                       {grouped.filtered.slice().sort((a, b) => b.parsedDate - a.parsedDate).slice(0, 8).map(it => (
-                        <div key={it._id || (it.parsedDate && it.parsedDate.getTime())} className="py-2 flex justify-between">
+                        <div key={it._id || (it.parsedDate && it.parsedDate.getTime())} className="recent-expense-item">
                           <div>
-                            <div className="font-medium">{it.category}</div>
-                            <div className="text-xs text-gray-500">{it.parsedDate.toLocaleDateString()} · {it.note}</div>
+                            <div className="item-category">{it.category}</div>
+                            <div className="item-date">{it.parsedDate.toLocaleDateString()} · {it.note}</div>
                           </div>
-                          <div className="text-right">₹{it.amount}</div>
+                          <div className="item-amount">₹{it.amount}</div>
                         </div>
                       ))}
                     </div>
@@ -328,39 +338,39 @@ export default function ShowExpenses() {
                 </div>
               </div>
             </div>
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      </div >
 
-      {/* Existing table / list area */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm">
-        <div className="text-sm text-gray-500 mb-2">All expenses</div>
-        {loading ? <div>Loading…</div> : (
+      {/* Expense list */}
+      <div className="expense-list-container" aria-label="All expenses">
+        <div className="expense-title">All Expenses</div>
+        {loading ? <div style={{ padding: 20 }}>Loading…</div> : (
           <>
             {filteredList.length === 0 ? (
-              <div className="text-gray-500 p-4">No expenses found. Add your first expense.</div>
+              <div className="no-data">No expenses found. Add your first expense.</div>
             ) : (
-              <div className="overflow-auto">
-                <table className="w-full text-left">
-                  <thead className="bg-gray-100">
+              <div className="expense-table-container" role="table">
+                <table className="expense-table" aria-label="Expenses table">
+                  <thead className="thead-class">
                     <tr>
-                      <th className="p-2">Date</th>
-                      <th className="p-2">Category</th>
-                      <th className="p-2">Amount</th>
-                      <th className="p-2">Note</th>
-                      <th className="p-2">Actions</th>
+                      <th className="th">Date</th>
+                      <th className="th">Category</th>
+                      <th className="th">Amount</th>
+                      <th className="th">Note</th>
+                      <th className="th">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredList.map(item => (
-                      <tr key={item._id} className="border-t">
-                        <td className="p-2">{new Date(item.date).toLocaleDateString()}</td>
-                        <td className="p-2">{item.category}</td>
-                        <td className="p-2">₹{item.amount}</td>
-                        <td className="p-2">{item.note}</td>
-                        <td className="p-2 space-x-2">
-                          <button onClick={() => setEditing(item)} className="text-indigo-600 text-sm">Edit</button>
-                          <button onClick={() => remove(item._id)} className="text-red-600 text-sm">Delete</button>
+                      <tr key={item._id} className="table-row" role="row">
+                        <td className="td" data-label="Date">{new Date(item.date).toLocaleDateString()}</td>
+                        <td className="td" data-label="Category">{item.category}</td>
+                        <td className="td" data-label="Amount">₹{item.amount}</td>
+                        <td className="td" data-label="Note">{item.note || '-'}</td>
+                        <td className="td actions-td" data-label="Actions">
+                          <button onClick={() => setEditing(item)} className="buttons-edit" aria-label={`Edit ${item.category}`}>Edit</button>
+                          <button onClick={() => remove(item._id)} className="buttons-delete" aria-label={`Delete ${item.category}`}>Delete</button>
                         </td>
                       </tr>
                     ))}
@@ -372,22 +382,25 @@ export default function ShowExpenses() {
         )}
       </div>
 
-      {/* Edit modal */}
-      {editing && (
-        <div className="fixed inset-0 z-40 flex items-end md:items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setEditing(null)} />
-          <div className="relative bg-white rounded-2xl shadow-lg p-6 w-full max-w-xl m-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-medium">Edit expense</h3>
-              <button onClick={() => setEditing(null)} className="text-gray-600">Close</button>
+      {/* Edit expense modal */}
+      {
+        editing && (
+          <div className="setting-modal-overlay" role="dialog" aria-modal="true" aria-label="Edit expense dialog">
+            <div className="editing-overlay" onClick={() => setEditing(null)} />
+            <div className="editing-modal-content">
+              <div className="editing-modal-header">
+                <h3 className="edit-title">Edit expense</h3>
+                <button onClick={() => setEditing(null)} className="edit-close-button" aria-label="Close edit">Close</button>
+              </div>
+              <ExpenseForm initial={editing} onSubmit={(p) => update(editing._id, p)} />
             </div>
-            <ExpenseForm initial={editing} onSubmit={(p) => update(editing._id, p)} />
           </div>
-        </div>
-      )}
-      <div className="fixed bottom-6 right-6 z-50">
-        <button onClick={() => navigate('/add-expense')} aria-label="Add expense" className="bg-indigo-600 text-white p-3 rounded-full shadow-lg text-xl">+</button>
+        )
+      }
+
+      <div className="add-expense-button-container">
+        <button onClick={() => navigate('/add-expense')} aria-label="Add expense" className="add-expense-button">+</button>
       </div>
-    </div>
+    </div >
   )
 }

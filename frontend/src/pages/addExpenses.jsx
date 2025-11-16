@@ -1,9 +1,12 @@
 // src/pages/addExpenses.jsx
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { ArrowLeftIcon } from 'lucide-react'
+
 import api from '../lib/api'
 import ExpenseForm from '../components/expenseForm'
-import toast from 'react-hot-toast'
+import "../styles/AddExpense.css"
 
 export default function AddExpense() {
   const navigate = useNavigate()
@@ -25,19 +28,14 @@ export default function AddExpense() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-primary">Add Expense</h2>
-          <p className="text-base-content/60 mt-1">Add a new expense — it will appear in your list and analytics.</p>
-        </div>
-        <button onClick={() => navigate('/expenses')} className="btn btn-ghost btn-sm">
-          ← Back
-        </button>
+    <div className="add-expense-page">
+      <div className="header">
+        <h2 className="page-title">Add Expense</h2>
+        <p className="page-discreption">Add a new expense — it will appear in your list and analytics.</p>
+        <button className="back-to-expense" onClick={() => navigate('/expenses')}><ArrowLeftIcon /> Back to Expenses</button>
       </div>
-
-      <div className="card bg-base-100 shadow-xl border border-base-300">
-        <div className="card-body">
+      <div className="expense-card-body">
+        <div className="card">
           <ExpenseForm onSubmit={handleCreate} submitting={submitting} />
         </div>
       </div>

@@ -5,7 +5,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import ShowExpenses from "./pages/showExpenses.jsx";
 import Predict from "./pages/Predict";
 import Profile from "./pages/Profile";
@@ -56,7 +55,6 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Private><Dashboard /></Private>} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/expenses" element={<Private><ShowExpenses /></Private>} />
           <Route path="/add-expense" element={<Private><AddExpense /></Private>} />
           <Route path="/predict" element={<Private><Predict /></Private>} />

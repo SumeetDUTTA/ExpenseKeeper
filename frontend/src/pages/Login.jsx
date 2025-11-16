@@ -48,12 +48,12 @@ export default function Login() {
 	}
 
 	if (loading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200">
-      <LoaderIcon size={44} className="animate-spin" />
-    </div>
-  );
-}
+		return (
+			<div className="min-h-screen flex items-center justify-center bg-base-200">
+				<LoaderIcon size={44} className="animate-spin" />
+			</div>
+		);
+	}
 	return (
 		<div className="container">
 			<div className="header">

@@ -1,0 +1,51 @@
+.add-expense-page {
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.header {
+    margin-bottom: 20px;
+}
+
+.page-title {
+    font-size: 32px;
+    font-weight: bold;
+    margin: 0;
+    margin-bottom: 8px;
+}
+
+.page-discreption {
+    font-size: 16px;
+    color: #666;
+    margin: 0;
+}
+
+.back-to-expense {
+    display: inline-flex;
+    align-items: center;
+    font-size: 14px;
+    color: #1a73e8;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+    padding: 0;
+}
+
+.back-to-expense svg {
+    margin-right: 6px;
+}
+
+.expense-card-body {
+    margin-top: 20px;
+}
+
+.card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+
