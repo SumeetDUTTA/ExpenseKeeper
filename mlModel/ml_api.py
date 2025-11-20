@@ -6,11 +6,26 @@ from pydantic import BaseModel
 from datetime import datetime
 import uvicorn
 import io
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.info("Starting ML API...")
+logger.info("numpy version: %s", np.__version__)
 
 MODEL_PATH = "expense_forecast_universal.pkl"  # Use the new universal model
+logger.info("Loading model from: %s", MODEL_PATH)
 model_package = joblib.load(MODEL_PATH)
-model = model_package['model']
-FEATURES = model_package['features']
+logger.info("Loaded object type: %s", type(model_package))
+
+if isinstance(model_package, dict):
+    model = model_package['model']
+    FEATURES = model_package['features']
+    logger.info("Loaded package dict. Features found: %s", bool(FEATURES))
+else:
+    model = model_package
+    FEATURES = None
+    logger.warning("Model package is not a dict. FEATURES set to None.")
 
 app = FastAPI(title='Expense Forecast API', version='2.0')
 
