@@ -168,7 +168,8 @@ Users can switch between light and dark themes using the sun/moon icon in the na
 ### Show Expenses (`/expenses`)
 -   Searchable, filterable expense table with pagination
 -   Monthly expense line chart with interactive brush
--   Category pie chart with hover tooltips
+-   Category distribution pie chart with percentages and color-coded segments
+-   Period breakdown table showing spending by time interval
 -   Edit/delete actions with confirmation dialogs
 
 ### Predict (`/predict`)

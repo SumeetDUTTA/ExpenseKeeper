@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Brush, } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Brush, PieChart, Pie, Cell, Legend } from 'recharts'
 import { LoaderCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -200,6 +200,20 @@ export default function ShowExpenses() {
 	const periodsCount = chartData.length || 1
 	const avgPerPeriod = Math.round(totalInRange / periodsCount || 0)
 
+	/* ---------- Category breakdown for pie chart ---------- */
+	const categoryData = useMemo(() => {
+		const categoryMap = new Map()
+		grouped.filtered.forEach(expense => {
+			const cat = expense.category || 'Other'
+			categoryMap.set(cat, (categoryMap.get(cat) || 0) + Number(expense.amount || 0))
+		})
+		return Array.from(categoryMap.entries())
+			.map(([name, value]) => ({ name, value: Math.round(value) }))
+			.sort((a, b) => b.value - a.value)
+	}, [grouped.filtered])
+
+	const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#f97316', '#06b6d4']
+
 	/* ---------- category options for filter dropdown ---------- */
 	const categories = useMemo(() => {
 		const cats = Array.from(new Set(list.map(i => i.category).filter(Boolean)))
@@ -319,6 +333,47 @@ export default function ShowExpenses() {
 											<div className="no-data">No data for chosen range</div>
 										)}
 									</div>
+								</div>
+
+								<div className="category-pie-chart-container" aria-hidden={loading}>
+									<div className="pie-chart-title">Category Distribution</div>
+									{categoryData.length === 0 ? (
+										<div className="no-data">No data</div>
+									) : (
+										<div style={{ width: '100%', height: '100%' }} className="pie-chart-wrapper">
+											<ResponsiveContainer width="100%" height="100%">
+												<PieChart data={chartData} margin={{ top: 8, right: 24, left: 24, bottom: 12 }}>
+													<Pie
+														data={categoryData}
+														cx="50%"
+														cy="40%"
+														labelLine={false}
+														label={false}
+														outerRadius={100}
+														fill="var(--accent-primary)"
+														dataKey="value"
+													>
+														{categoryData.map((_entry, index) => (
+															<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+														))}
+													</Pie>
+													<Tooltip
+														formatter={(value) => `₹${value}`}
+														contentStyle={{ background: "var(--card-bg)", borderColor: "var(--border-color)", color: "var(--text-primary)" }}
+														labelStyle={{ color: "var(--text-secondary)" }}
+													/>
+												</PieChart>
+											</ResponsiveContainer>
+											<div className="pie-legend" role="list" aria-label="Category legend">
+												{categoryData.map((entry, index) => (
+													<div className="legend-item" key={entry.name} role="listitem">
+														<div className="legend-color-box" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+														<div style={{ fontSize: 13, color: 'var(--muted)' }}>{entry.name} • {((entry.value / Math.max(1, totalInRange)) * 100).toFixed(0)}%</div>
+													</div>
+												))}
+											</div>
+										</div>
+									)}
 								</div>
 
 								<div className="period-breakdown-container" aria-hidden={loading}>
