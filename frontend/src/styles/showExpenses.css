@@ -320,6 +320,24 @@
   font-weight: 600;
 }
 
+.pie-legend {
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-color-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
 .breakdown-table {
   width: 100%;
   border-collapse: collapse;
@@ -592,6 +610,28 @@
     margin-top: 10px;
   }
 
+  /* Pie chart mobile adjustments */
+  .category-pie-chart-container {
+    margin-top: 10px;
+  }
+
+  .pie-chart-wrapper {
+    padding: 12px;
+  }
+
+  .pie-legend {
+    gap: 6px;
+  }
+
+  .legend-item {
+    font-size: 12px;
+  }
+
+  .legend-color-box {
+    width: 12px;
+    height: 12px;
+  }
+
   /* Recent list vertical spacing */
   .recent-expenses-list {
     gap: 6px;
@@ -746,6 +786,21 @@ button:focus,
 /* subtle fade-in */
 .expense-page-container {
   animation: pageFade .32s ease;
+}
+
+@media (max-width: 768px) {
+  .category-pie-chart-container {
+    width: 100%;
+  }
+
+  .pie-chart-wrapper {
+    height: 260px !important;   /* force a proper height */
+    padding: 8px;
+  }
+
+  .pie-chart-wrapper svg {
+    overflow: visible !important; /* prevent clipping */
+  }
 }
 
 @keyframes pageFade {

@@ -345,11 +345,11 @@ export default function ShowExpenses() {
 												<PieChart data={chartData} margin={{ top: 8, right: 24, left: 24, bottom: 12 }}>
 													<Pie
 														data={categoryData}
-														cx="50%"
-														cy="40%"
+														cx={window.innerWidth < 768 ? "50%" : "50%"}
+														cy={window.innerWidth < 768 ? "50%" : "35%"}
+														outerRadius={window.innerWidth < 768 ? 80 : 100}
 														labelLine={false}
 														label={false}
-														outerRadius={100}
 														fill="var(--accent-primary)"
 														dataKey="value"
 													>
