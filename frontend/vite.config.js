@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api': {
-          target: env.VITE_API_TARGET || 'http://localhost:5000',
+          target: 'https://expense-keeper-backend.onrender.com' || 'http://localhost:5000',
           changeOrigin: true,
           secure: false,
         },
