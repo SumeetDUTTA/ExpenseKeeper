@@ -31,7 +31,7 @@ function AuthProvider({children}){
     }, [user]);
 
     async function login(credentials) {
-        const res = await api.post("/auth/login", credentials)
+        const res = await api.post("/api/auth/login", credentials)
         if(res.data && res.data.token){
             setToken(res.data.token);
             setUser(res.data.user);
@@ -40,7 +40,7 @@ function AuthProvider({children}){
     }
 
     async function register(payload) {
-        const res = await api.post("/auth/register", payload)
+        const res = await api.post("/api/auth/register", payload)
         if (res.data && res.data.token){
             setToken(res.data.token);
             setUser(res.data.user);
