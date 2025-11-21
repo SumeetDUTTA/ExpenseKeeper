@@ -1,13 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
 	UserPlus, Mail, Lock, User, LogIn, Eye, EyeOff,
-	LoaderCircle
+	LoaderCircle, Check
 } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { useAuth } from "../contexts/authContext";
 import "../styles/LoginSignup.css";
+
+/**
+ * Frontend password validation uses the exact same rule as backend:
+ *   - min 6 chars (backend uses .min(6))
+ *   - at least 1 uppercase letter
+ *   - at least 1 digit
+ *   - at least 1 special char from @$!%*?&
+ *
+ * Regex mirror (from backend authValidator.js):
+ * /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/
+ */
+
+const BACKEND_PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
 
 export default function Login() {
 	const { login, register } = useAuth();
@@ -21,15 +34,34 @@ export default function Login() {
 	const [showPassword, setShowPassword] = useState(false);
 	const [remember, setRemember] = useState(false);
 
+	// Derived validation flags (displayed live)
+	const validations = useMemo(() => {
+		const hasMinLen = password.length >= 6;
+		const hasUpper = /[A-Z]/.test(password);
+		const hasDigit = /\d/.test(password);
+		const hasSpecial = /[@$!%*?&]/.test(password);
+		const matchesBackend = BACKEND_PASSWORD_REGEX.test(password);
+		return { hasMinLen, hasUpper, hasDigit, hasSpecial, matchesBackend };
+	}, [password]);
+
 	const isValid = () => {
 		if (!email || !password) return false;
-		if (mode === "signup" && !name) return false;
+		if (mode === "signup") {
+			if (!name) return false;
+			// For signup require password to match backend rules
+			if (!validations.matchesBackend) return false;
+		}
 		return true;
 	};
 
 	async function submit(event) {
 		event.preventDefault();
 		if (!isValid()) {
+			// show appropriate helpful message
+			if (mode === "signup" && !validations.matchesBackend) {
+				toast.error("Password does not meet requirements. See the checklist.");
+				return;
+			}
 			toast.error("Please fill required fields");
 			return;
 		}
@@ -37,15 +69,33 @@ export default function Login() {
 		setLoading(true);
 		try {
 			if (mode === "signup") {
-				await register({ name, email, password });
+				const res = await register({ name, email, password });
+				// server may return structured validation error - show it
+				if (res?.data?.success === false && res?.data?.errors) {
+					const serverMsg = res.data.errors.map(e => e.message).join(" ");
+					toast.error(serverMsg);
+					setLoading(false);
+					return;
+				}
 				toast.success("Account created!");
 			} else {
-				await login({ email, password, remember });
-				toast.success("Welcome back!");
+				const res = await login({ email, password, remember });
+				// login() handles toasts for network errors; but show success
+				if (res?.data?.token) toast.success("Welcome back!");
 			}
 			nav("/");
 		} catch (err) {
-			toast.error(err?.response?.data?.message || "Something went wrong");
+			// handle axios structured errors gracefully
+			const serverMessage = err?.response?.data?.message;
+			const fieldErrors = err?.response?.data?.errors;
+			if (fieldErrors && Array.isArray(fieldErrors)) {
+				const serverMsg = fieldErrors.map(e => e.message).join(" ");
+				toast.error(serverMsg);
+			} else if (serverMessage) {
+				toast.error(serverMessage);
+			} else {
+				toast.error("Something went wrong");
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -66,7 +116,6 @@ export default function Login() {
 		<main className="screen">
 			<div className="container">
 
-				{/* HEADER FIXED */}
 				<header className="header">
 					<div className="title-wrapper">
 						<h1 className="text">
@@ -83,7 +132,7 @@ export default function Login() {
 
 				<section className="card">
 
-					{/* ALWAYS SHOW BOTH TABS */}
+					{/* TABS */}
 					<div className="tabs">
 						<button
 							className={`tab ${mode === "signup" ? "active" : ""}`}
@@ -126,24 +175,54 @@ export default function Login() {
 							/>
 						</label>
 
-						<label className="input input-with-action">
-							<Lock className="icon" />
-							<input
-								type={showPassword ? "text" : "password"}
-								placeholder="Password"
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-							/>
-							<button
-								type="button"
-								className="icon-action"
-								onClick={() => setShowPassword((v) => !v)}
-							>
-								{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-							</button>
+						<label className="input input-with-action" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
+							<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+								<Lock className="icon" />
+								<input
+									type={showPassword ? "text" : "password"}
+									placeholder="Password"
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
+									style={{ flex: 1 }}
+								/>
+								<button
+									type="button"
+									className="icon-action"
+									onClick={() => setShowPassword((v) => !v)}
+									aria-label={showPassword ? "Hide password" : "Show password"}
+								>
+									{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+								</button>
+							</div>
+
+							{/* Password requirements checklist (visible for signup) */}
+							{mode === "signup" && (
+								<div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
+									<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+										<input
+											type="checkbox"
+											checked={validations.matchesBackend}
+											readOnly
+											disabled
+											aria-label="Password meets backend standards"
+										/>
+										<span style={{ fontSize: 13 }}>
+											Password meets backend standards
+										</span>
+									</div>
+
+									{/* Detailed small checklist */}
+									<div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+										<SmallChecklistItem ok={validations.hasMinLen} text="Min 6 characters" />
+										<SmallChecklistItem ok={validations.hasUpper} text="Uppercase letter (A-Z)" />
+										<SmallChecklistItem ok={validations.hasDigit} text="Number (0-9)" />
+										<SmallChecklistItem ok={validations.hasSpecial} text="Special char (@$!%*?&)" />
+									</div>
+								</div>
+							)}
 						</label>
 
-						{/* Remember me visible FIX */}
+						{/* Remember me visible only on login */}
 						{mode === "login" && (
 							<label className="checkbox-label">
 								<input
@@ -155,8 +234,11 @@ export default function Login() {
 							</label>
 						)}
 
+						{/* Show helpful prompt */}
 						{!isValid() && (
-							<div className="error-text">Please fill all required fields.</div>
+							<div className="error-text">
+								{mode === "signup" ? "Please fill required fields and ensure password meets requirements." : "Please fill required fields."}
+							</div>
 						)}
 
 						<button
@@ -177,5 +259,26 @@ export default function Login() {
 
 			</div>
 		</main>
+	);
+}
+
+/* small helper component inside same file for checklist UI */
+function SmallChecklistItem({ ok, text }) {
+	return (
+		<div style={{
+			display: 'inline-flex',
+			alignItems: 'center',
+			gap: 6,
+			fontSize: 13,
+			color: ok ? 'var(--text-primary)' : 'var(--text-muted)',
+			padding: '6px 8px',
+			borderRadius: 8,
+			border: `1px solid ${ok ? 'transparent' : 'var(--border-color)'}`,
+			background: ok ? 'rgba(34,197,94,0.06)' : 'transparent',
+			minWidth: 140
+		}}>
+			{ok ? <Check size={14} /> : <span style={{ width: 14, height: 14 }} />}
+			<span>{text}</span>
+		</div>
 	);
 }
