@@ -4,7 +4,7 @@ const BASE = import.meta.env.VITE_API_TARGET || "http://localhost:5000"
 
 const api = axios.create({
     baseURL: BASE,
-    withCredentials: true,
+    withCredentials: false,
     headers: {
     "Content-Type": "application/json",
   },
