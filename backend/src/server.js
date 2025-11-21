@@ -24,10 +24,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined': 'dev' ));
 
-const corsOrigin = [
-  'https://expense-keeper-two.vercel.app',
-  process.env.CORS_ORIGIN
-];
+const corsOrigin = '*';
 app.use(cors({ origin: corsOrigin, credentials: true }));
 
 const limiter = rateLimit({
