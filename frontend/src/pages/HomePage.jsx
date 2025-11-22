@@ -20,8 +20,8 @@ export default function HomePage() {
       <header className="hero">
         <nav className="navbar">
           <div className="logo">
-            <span className="logo-icon">💰</span>
-            <span className="logo-text">Smart Expense Tracker</span>
+            <span className="logo-icon">EK</span>
+            <span className="logo-text">ExpenseKeeper</span>
           </div>
           <div className="nav-links">
             <a href="#features" className="nav-link">Features</a>
