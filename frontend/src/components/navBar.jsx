@@ -39,16 +39,19 @@ export default function NavBar() {
 		};
 	}, []);
 
+	// Don't show navbar on home page for non-authenticated users
+	if (!token && location.pathname === '/') {
+		return null;
+	}
+
 	return (
 		<header className="site-nav">
 			<div className="nav-inner">
 				<div className="brand-row">
-					<Link to="/" className="brand">
-						<span className="brand-mark">EK</span>
-						<span className="brand-name">ExpenseKeeper</span>
-					</Link>
-
-					{token && (
+				<Link to={token ? "/dashboard" : "/"} className="brand">
+					<span className="brand-mark">EK</span>
+					<span className="brand-name">ExpenseKeeper</span>
+				</Link>					{token && (
 						<>
 							<ThemeSwitcher />
 							<button
@@ -71,11 +74,9 @@ export default function NavBar() {
 				>
 					{token ? (
 						<>
-							<NavItem to="/" exact onClick={() => setIsOpen(false)}>
-								<Home /> <span>Dashboard</span>
-							</NavItem>
-
-							<NavItem to="/expenses" onClick={() => setIsOpen(false)}>
+					<NavItem to="/dashboard" exact onClick={() => setIsOpen(false)}>
+						<Home /> <span>Dashboard</span>
+					</NavItem>							<NavItem to="/expenses" onClick={() => setIsOpen(false)}>
 								<Wallet /> <span>Expenses</span>
 							</NavItem>
 

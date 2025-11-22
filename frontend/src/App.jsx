@@ -9,6 +9,7 @@ import ShowExpenses from "./pages/showExpenses.jsx";
 import Predict from "./pages/Predict";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/dashboard";
+import HomePage from "./pages/HomePage";
 import { useAuth } from "./contexts/authContext";
 import NavBar from "./components/navBar";
 import AddExpense from "./pages/addExpenses";
@@ -53,8 +54,9 @@ export default function App() {
 
         <NavBar />
         <Routes>
-          <Route path="/" element={<Private><Dashboard /></Private>} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Private><Dashboard /></Private>} />
           <Route path="/expenses" element={<Private><ShowExpenses /></Private>} />
           <Route path="/add-expense" element={<Private><AddExpense /></Private>} />
           <Route path="/predict" element={<Private><Predict /></Private>} />

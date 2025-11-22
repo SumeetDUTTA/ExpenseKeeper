@@ -83,7 +83,7 @@ export default function Login() {
 				// login() handles toasts for network errors; but show success
 				if (res?.data?.token) toast.success("Welcome back!");
 			}
-			nav("/");
+			nav("/dashboard");
 		} catch (err) {
 			// handle axios structured errors gracefully
 			const serverMessage = err?.response?.data?.message;
