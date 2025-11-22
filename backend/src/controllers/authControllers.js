@@ -8,7 +8,7 @@ import ApiError from '../utils/ApiError.js';
 import User from '../models/user.js';
 
 async function wakeMlServer() {
-  const WAKE_URL = `${process.env.ML_WAKE_URL}/docs` || 'https:localhost:8000/docs';
+  const WAKE_URL = `${process.env.ML_API_URL}/docs` || 'https:localhost:8000/docs';
 
   axios.get(WAKE_URL, { timeout: 3000 })
     .then(() => console.log('ML server wake ping sent OK'))
