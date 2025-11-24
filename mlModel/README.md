@@ -67,7 +67,7 @@ python train_model.py
 ```
 
 - The script will load the dataset from the `mlModel\training_data.csv` directory.
-- It will preprocess the data, train the model, and save the trained model artifact (e.g., `model.pkl`, `model.h5`) to the `/models` directory.
+- It will preprocess the data, train the model, and save the trained model artifact (e.g., `model.pkl`, `model.h5`).
 
 ## Usage
 
