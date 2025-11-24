@@ -8,6 +8,7 @@ The ExpenseKeeper frontend is a modern, responsive single-page application that 
 
 ## ✨ Features
 
+-   **Landing Page:** Modern, informative home page for new users with project overview, features showcase, and step-by-step guide
 -   **User Authentication:** JWT-based secure login and registration with persistent session management via Context API and localStorage
 -   **Responsive Design:** Mobile-first design using TailwindCSS and DaisyUI, fully responsive across desktop (1920px+), tablet (768px-1024px), and mobile (320px-768px) viewports
 -   **Component-Based Architecture:** Modular React components with clear separation of concerns (pages, components, contexts, utilities)
@@ -57,10 +58,24 @@ frontend/
 │   ├── pages/               # Page-level components
 │   │   ├── addExpenses.jsx         # Add new expense page
 │   │   ├── dashboard.jsx           # Main analytics dashboard
-│   │   ├── Login.jsx               # Login page
+│   │   ├── HomePage.jsx            # Landing page for new users
+│   │   ├── Login.jsx               # Login/Signup page
 │   │   ├── Predict.jsx             # ML prediction interface
 │   │   ├── Profile.jsx             # User profile and settings
 │   │   └── showExpenses.jsx        # Expense list and analytics
+│   ├── styles/              # Component-specific CSS modules
+│   │   ├── AddExpense.css          # Add expense page styles
+│   │   ├── Dashboard.css           # Dashboard page styles
+│   │   ├── ExpenseForm.css         # Expense form component styles
+│   │   ├── homePage.css            # Landing page styles
+│   │   ├── LoginSignup.css         # Login/signup page styles
+│   │   ├── NavBar.css              # Navigation bar styles
+│   │   ├── popUp.css               # Modal/popup styles
+│   │   ├── Predict.css             # Prediction page styles
+│   │   ├── Profile.css             # Profile page styles
+│   │   ├── showExpenses.css        # Expenses list page styles
+│   │   ├── theme.css               # Theme-specific styles
+│   │   └── ThemeSwitcher.css       # Theme toggle component styles
 │   ├── App.jsx              # Main app component with routes
 │   ├── App.css              # Global application styles
 │   ├── index.css            # CSS reset, design tokens, base styles
@@ -143,15 +158,29 @@ Users can switch between light and dark themes using the sun/moon icon in the na
 
 ## 🔒 Authentication Flow
 
-1.  User registers via `/register` → Backend creates account → Auto-redirect to login
-2.  User logs in via `/login` → Backend validates → Returns JWT token
-3.  Token stored in localStorage and AuthContext
-4.  Protected routes check auth status → Redirect to login if unauthenticated
-5.  All API requests include `Authorization: Bearer <token>` header
-6.  Token refresh handled by backend (7-day expiry)
-7.  Logout clears localStorage and redirects to login
+1.  New user visits `/` → Sees landing page with project overview and features
+2.  User clicks "Get Started" or "Login" → Redirected to `/login`
+3.  User registers or logs in → Backend validates → Returns JWT token
+4.  Token stored in localStorage and AuthContext
+5.  User auto-redirected to `/dashboard` after successful login
+6.  Protected routes check auth status → Redirect to `/login` if unauthenticated
+7.  All API requests include `Authorization: Bearer <token>` header
+8.  Token refresh handled by backend (7-day expiry)
+9.  Logout clears localStorage and redirects to login
+10. Authenticated users trying to access `/` are auto-redirected to `/dashboard`
 
 ## 📊 Key Pages
+
+### Home Page (`/`)
+-   Landing page for new/non-authenticated users
+-   Hero section with project overview and value proposition
+-   Feature showcase: Expense Tracking, AI Predictions, Visual Analytics, Budget Planning
+-   Step-by-step guide: Sign Up → Track Expenses → Get AI Insights
+-   Detailed feature breakdown showing what users will experience
+-   Technology stack showcase (React, Node.js, MongoDB, XGBoost)
+-   Call-to-action sections for user registration
+-   Responsive design with purple gradient theme
+-   Auto-redirects authenticated users to dashboard
 
 ### Dashboard (`/dashboard`)
 -   Overview cards: Total Expenses, Budget Status, Expense Distribution
@@ -188,4 +217,4 @@ Users can switch between light and dark themes using the sun/moon icon in the na
 
 -   **Sumeet Dutta** - Full-Stack Developer
 -   GitHub: [@SumeetDUTTA](https://github.com/SumeetDUTTA)
--   Project: [Smart-Expense-Tracker-with-Predictive-Analytics](https://github.com/SumeetDUTTA/Smart-Expense-Tracker-with-Predictive-Analytics)
+-   Project: [Smart-Expense-Tracker-with-Predictive-Analytics](https://github.com/SumeetDUTTA/ExpenseKeeper)
