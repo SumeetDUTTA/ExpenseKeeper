@@ -1,11 +1,28 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/authContext';
+import axios from 'axios';
 import '../styles/homePage.css';
 
 export default function HomePage() {
   const { token } = useAuth();
   const navigate = useNavigate();
+
+  // Wake up backend server on Render
+  React.useEffect(() => {
+    const wakeBackend = async () => {
+      const backendUrl = import.meta.env.VITE_API_TARGET || 'http://localhost:5000';
+      try {
+        console.log('Waking backend server:', backendUrl);
+        await axios.get(`${backendUrl}/health`, { timeout: 60000 });
+        console.log('Backend server wake ping sent OK');
+      } catch (error) {
+        console.debug('Backend wake ping failed (ignored):', error.message);
+      }
+    };
+    
+    wakeBackend();
+  }, []);
 
   // If user is already logged in, redirect to dashboard
   React.useEffect(() => {

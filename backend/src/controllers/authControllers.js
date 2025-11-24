@@ -8,10 +8,10 @@ import ApiError from '../utils/ApiError.js';
 import User from '../models/user.js';
 
 async function wakeMlServer() {
-  const WAKE_URL = `${process.env.ML_API_URL}/docs` || 'https:localhost:8000/docs';
-  console.log(WAKE_URL);
+  const WAKE_URL = `${process.env.ML_API_URL || 'http://localhost:8000'}`;
+  console.log('Waking ML server:', WAKE_URL);
 
-  axios.get(WAKE_URL, { timeout: 3000 })
+  axios.get(WAKE_URL, { timeout: 60000 }) // 60 seconds for cold start
     .then(() => console.log('ML server wake ping sent OK'))
     .catch(err => console.debug('ML wake ping failed (ignored):', err.message));
 }
