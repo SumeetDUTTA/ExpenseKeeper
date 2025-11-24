@@ -9,8 +9,9 @@ ExpenseKeeper combines traditional expense management with predictive analytics 
 ## Technologies Used
 
 - **Frontend:** React (Vite), React Router, Recharts, Lucide Icons, React Hot Toast, TailwindCSS, DaisyUI
-- **Backend:** Node.js, Express.js, JWT authentication, Zod validation, bcrypt
-- **Database:** MongoDB with Mongoose ODM
+- **Backend:** Node.js, Express.js 5.x, JWT authentication, Zod 4.x validation, bcrypt
+- **Database:** MongoDB with Mongoose 8.x ODM
+- **Rate Limiting:** Redis (Upstash) - 50 req/min general, 5 req/min auth
 - **Machine Learning:** Python, XGBoost, FastAPI, Optuna (hyperparameter tuning), scikit-learn, pandas, numpy
 - **Development:** Nodemon (backend), Vite dev server (frontend), Uvicorn (ML API)
 
@@ -77,6 +78,8 @@ ExpenseKeeper combines traditional expense management with predictive analytics 
    JWT_SECRET=your_jwt_secret_key
    PORT=5000
    ML_API_URL=http://localhost:8000
+   UPSTASH_REDIS_REST_URL=your_upstash_redis_url
+   UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
    ```
 
 3. **Frontend Setup:**
@@ -116,7 +119,7 @@ Start all three services in separate terminals:
 3. **ML API:**
    ```bash
    cd mlModel
-   python ml_api.py
+   uvicorn ml_api:app --reload --host 0.0.0.0 --port 8000
    ```
 
 The application will be available at:
@@ -126,14 +129,18 @@ The application will be available at:
 
 ## Core Features
 
-### User Management
+### Landing & Authentication
+- **Marketing Home Page:** Dedicated landing page for new visitors explaining features, workflow, and technology stack
+- **Auto-redirect:** Authenticated users automatically redirected to dashboard
 - **Secure Authentication:** JWT-based signup/login with bcrypt password hashing
-- **User Profiles:** Customizable profiles with monthly budget settings and user type selection
+
+### User Management
+- **User Profiles:** Customizable profiles with monthly budget settings and user type selection (college student, young professional, family moderate/high, luxury lifestyle, senior retired)
 - **Theme Support:** Light and dark mode with persistent preferences
 
 ### Expense Management
 - **CRUD Operations:** Add, view, edit, and delete expenses with amount, category, date, and notes
-- **Category Organization:** Pre-defined categories (Food & Drink, Travel, Utilities, Entertainment, Health & Fitness, Shopping, Rent, etc.)
+- **Category Organization:** 13 pre-defined categories (Food & Drink, Travel, Utilities, Entertainment, Health & Fitness, Shopping, Rent, Personal Care, Education, Investments, Groceries, Miscellaneous, Transportation)
 - **Search & Filter:** Real-time search and category-based filtering
 - **Responsive Design:** Mobile-first UI with adaptive layouts
 
@@ -161,34 +168,38 @@ The application will be available at:
 
 The prediction engine uses a universal XGBoost model trained on synthetic transaction data covering multiple user profiles and budget ranges (₹3,000 - ₹60,000/month).
 
-**Features:**
+**Features (33 total):**
 - Time-series signals: 1/2/3/12-month lags, 3/6/12-month rolling averages
 - Trend indicators: 3-month trend, percentage change
 - Calendar features: month number, sine/cosine seasonality
 - Budget context: log budget, budget category buckets, spend-to-budget ratio
 - Behavioral mix: category one-hot encodings, user type encodings, category share of total spend
 
-**Performance:** 
-- Test MAE: ~₹800-1000 depending on user profile
-- Handles diverse spending patterns across user types
-- Stable multi-step forecasts with drift correction
+**Performance:**
+- MAE (rupees): ₹1,145.08 - Average absolute rupee error per month
+- RMSE (rupees): ₹2,145.47 - Root mean squared error
+- Model Accuracy: ~89-91% across different user types and budget ranges
+- Handles diverse spending patterns from ₹3,000 to ₹60,000 monthly budgets
+- Optimized with Optuna (690 trees, depth 6, learning rate 0.0308)
 
 See `mlModel/README.md` for detailed ML documentation.
 
 ## API Endpoints
 
 ### Backend (Express)
-- `POST /api/auth/register` - User registration
+- `POST /api/auth/signup` - User registration
 - `POST /api/auth/login` - User login
-- `GET /api/expenses` - Get all user expenses
+- `GET /api/expenses` - Get all user expenses (with optional filters)
 - `POST /api/expenses` - Create new expense
 - `PATCH /api/expenses/:id` - Update expense
 - `DELETE /api/expenses/:id` - Delete expense
 - `GET /api/user/profile` - Get user profile
-- `PATCH /api/user/profile` - Update profile/budget
+- `PATCH /api/user/profile` - Update user profile
+- `PATCH /api/user/meta` - Update user metadata (budget, user type)
 
 ### ML API (FastAPI)
-- `POST /predict` - Batch category forecast
+- `GET /` - Health check endpoint
+- `POST /predict-expense` - Get expense predictions for multiple months and categories
 
 ## Development
 
