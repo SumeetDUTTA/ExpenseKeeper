@@ -7,6 +7,8 @@
     "Rolling3",
     "Rolling6",
     "Rolling12",
+    "Rolling3_Median",
+    "Volatility_6",
     "trend_3",
     "pct_change",
     "month_num",
@@ -35,16 +37,16 @@
     "budget_category_luxury"
   ],
   "best_params": {
-    "n_estimators": 690,
+    "n_estimators": 340,
     "max_depth": 6,
-    "learning_rate": 0.030778892880415888,
-    "reg_lambda": 1.9810255906073189,
-    "reg_alpha": 0.4848490132195659
+    "learning_rate": 0.08856561545579422,
+    "reg_lambda": 1.9298133651945828,
+    "reg_alpha": 0.658723817916754
   },
-  "mae_log": 0.6065687180390389,
-  "rmse_log": 0.7207935790498545,
-  "mae_rupees": 1145.0773913472497,
-  "rmse_rupees": 2145.4690593505693,
+  "mae_log": 0.5144845166060114,
+  "rmse_log": 0.6582759052718621,
+  "mae_rupees": 996.3999072604711,
+  "rmse_rupees": 2023.5062906432427,
   "training_info": "Universal model trained on all user types and spending ranges",
   "user_types": [
     "college_student",

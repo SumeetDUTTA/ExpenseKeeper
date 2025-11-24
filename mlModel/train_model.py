@@ -5,7 +5,7 @@ from xgboost import XGBRegressor
 import optuna
 import joblib
 
-df = pd.read_csv("universal_training_data.csv")
+df = pd.read_csv("training_data.csv")
 
 def train_universal_model():
     # Train XGBoost model on universal data covering all user types
@@ -50,6 +50,19 @@ def train_universal_model():
         .transform(lambda x: x.shift(1).rolling(12, min_periods=1).mean())
     )
 
+    # 1. Rolling Median (Robust to outliers)
+    monthly['Rolling3_Median'] = (
+        monthly.groupby(['Category', 'UserType'])['log_amount']
+        .transform(lambda x: x.shift(1).rolling(3, min_periods=1).median())
+    )
+
+    # 2. Volatility (Standard Deviation of the last 6 months)
+    # This tells the model: "Is this user usually stable or erratic?"
+    monthly['Volatility_6'] = (
+        monthly.groupby(['Category', 'UserType'])['log_amount']
+        .transform(lambda x: x.shift(1).rolling(6, min_periods=1).std())
+    )
+
     # Time-based features
     monthly['month_num'] = monthly['Date'].dt.month
     monthly['month_sin'] = np.sin(2 * np.pi * monthly['month_num'] / 12)
@@ -88,20 +101,27 @@ def train_universal_model():
     FEATURES = [
         'lag_1', 'lag_2', 'lag_3', 'lag_12',
         'Rolling3', 'Rolling6', 'Rolling12',
+        'Rolling3_Median', 'Volatility_6',
         'trend_3', 'pct_change',
         'month_num', 'month_sin', 'month_cos',
         'log_total_budget', 'spend_ratio', 'category_ratio'
     ] + [col for col in data.columns if col.startswith(('Category_', 'UserType_', 'budget_category_'))]
 
-    X = data[FEATURES]
-    y = data['target']
+    # Sort strictly by date first to ensure temporal order
+    data = data.sort_values(by=['Date', 'UserType', 'Category'])
 
-    # Train/test split
-    test_size = 60
-    train_X, test_X = X[:-test_size], X[-test_size:]
-    train_y, test_y = y[:-test_size], y[-test_size:]
+    # Define a cutoff date for validation (e.g., keep last 3 months for testing)
+    cutoff_date = data['Date'].max() - pd.DateOffset(months=3)
 
-    print(f"Training on {len(train_X)} samples, testing on {len(test_X)} samples")
+    train = data[data['Date'] <= cutoff_date].copy()
+    test = data[data['Date'] > cutoff_date].copy()
+
+    train_X = train[FEATURES]
+    train_y = train['target']
+    test_X = test[FEATURES]
+    test_y = test['target']
+
+    print(f"Training until {cutoff_date.date()}, Testing on {len(test)} rows after cutoff.")
     print(f"Features: {len(FEATURES)}")
 
     # Optuna optimization
@@ -111,11 +131,20 @@ def train_universal_model():
         lr = trial.suggest_float('learning_rate', 0.03, 0.15)
         reg_lambda = trial.suggest_float('reg_lambda', 0.1, 2.0)
         reg_alpha = trial.suggest_float('reg_alpha', 0.0, 1.0)
+        monotonic_constraints = {}
+        for feat in FEATURES:
+            if feat == 'log_total_budget':
+                monotonic_constraints[feat] = 1
+            elif feat == 'lag_1': # Generally, if last month was high, next is likely high
+                monotonic_constraints[feat] = 1
+            else:
+                monotonic_constraints[feat] = 0
         
         model = XGBRegressor(
             n_estimators=n_estimators,
             max_depth=max_depth,
             learning_rate=lr,
+            mono_constraints=monotonic_constraints,
             reg_lambda=reg_lambda,
             reg_alpha=reg_alpha,
             random_state=42,

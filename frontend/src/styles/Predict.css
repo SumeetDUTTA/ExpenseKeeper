@@ -12,11 +12,11 @@
 /* Page layout */
 .predict-page-container {
 	min-height: 100vh;
-	padding: 28px 16px;
+	padding: 16px 16px;
 	background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg) 100%);
 	display: flex;
 	flex-direction: column;
-	gap: 18px;
+	gap: 12px;
 	align-items: center;
 	box-sizing: border-box;
 }
@@ -66,13 +66,13 @@
 	max-width: 1100px;
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 12px;
 }
 
 .card-body {
 	background: var(--panel);
 	border-radius: var(--card-radius);
-	padding: 16px;
+	padding: 12px;
 	box-shadow: var(--shadow);
 	border: 1px solid rgba(15, 23, 42, 0.03);
 }
@@ -80,7 +80,7 @@
 .form-grid {
 	display: grid;
 	grid-template-columns: 1fr 320px;
-	gap: 18px;
+	gap: 12px;
 	align-items: stretch;
 }
 
@@ -211,7 +211,7 @@
 .grid-2 {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	gap: 16px;
+	gap: 12px;
 }
 
 @media (max-width:920px) {
