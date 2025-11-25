@@ -14,6 +14,7 @@
     "month_num",
     "month_sin",
     "month_cos",
+    "is_festival_season",
     "log_total_budget",
     "spend_ratio",
     "category_ratio",
@@ -37,16 +38,16 @@
     "budget_category_luxury"
   ],
   "best_params": {
-    "n_estimators": 340,
-    "max_depth": 6,
-    "learning_rate": 0.08856561545579422,
-    "reg_lambda": 1.9298133651945828,
-    "reg_alpha": 0.658723817916754
+    "n_estimators": 513,
+    "max_depth": 12,
+    "learning_rate": 0.05509381672798304,
+    "reg_lambda": 1.8430548939425073,
+    "reg_alpha": 0.8957971067746203
   },
-  "mae_log": 0.5144845166060114,
-  "rmse_log": 0.6582759052718621,
-  "mae_rupees": 996.3999072604711,
-  "rmse_rupees": 2023.5062906432427,
+  "mae_log": 0.48255821030604196,
+  "rmse_log": 0.6214610373024652,
+  "mae_rupees": 863.1345907253689,
+  "rmse_rupees": 1771.6998726813308,
   "training_info": "Universal model trained on all user types and spending ranges",
   "user_types": [
     "college_student",

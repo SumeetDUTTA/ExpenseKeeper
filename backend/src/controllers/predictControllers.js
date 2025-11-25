@@ -16,11 +16,14 @@ export async function predict(req, res, next) {
         const user_type = req.body.user_type || user.user_type || 'college_student';
 
         const cacheKey = `forecast:${user._id}:${horizon}:${user_total_budget}:${user_type}`;
+        const isProduction = process.env.NODE_ENV === 'production';
 
-        // Check Redis cache
-        const cachedResult = await redisClient.get(cacheKey);
-        if (cachedResult) {
-            return res.status(200).json(JSON.parse(cachedResult));
+        // Check Redis cache (only in production)
+        if (isProduction) {
+            const cachedResult = await redisClient.get(cacheKey);
+            if (cachedResult) {
+                return res.status(200).json(JSON.parse(cachedResult));
+            }
         }
 
         // Get user's expense data grouped by month and category
@@ -124,11 +127,13 @@ export async function predict(req, res, next) {
 
         const used_fallback = predictionResult.used_fallback === true;
 
-        if (!used_fallback) {
+        if (isProduction && !used_fallback) {
             console.log(`✅ Caching prediction result with key: ${method}`);
             await redisClient.set(cacheKey, JSON.stringify(result), {
                 EX: 3600 // Cache for 1 hour
             });
+        } else if (!isProduction) {
+            console.log(`🔧 Development mode: Skipping cache storage`);
         } else {
             console.warn(`⚠️ Prediction used fallback method (${method}); result not cached.`);
         }

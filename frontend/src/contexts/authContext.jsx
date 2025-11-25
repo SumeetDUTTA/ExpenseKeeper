@@ -62,6 +62,7 @@ function AuthProvider({ children }) {
                 console.error('🔥 error.response.data', error.response.data);
                 toast.error(`Login failed: ${error.response.data?.message ?? error.message}`);
             } else {
+                console.error('🔥 Login error message:', error.message);
                 toast.error(`Login failed: ${error.message}`);
             }
         }
@@ -82,6 +83,7 @@ function AuthProvider({ children }) {
                 console.error('🔥 error.response.data', error.response.data);
                 toast.error(`Register failed: ${error.response.data?.message ?? error.message}`);
             } else {
+                console.error('🔥 Register error message:', error.message);
                 toast.error(`Register failed: ${error.message}`);
             }
         }

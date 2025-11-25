@@ -36,10 +36,16 @@ function keyToLabel(key, agg) {
 		return `${monthNames[Number(m) - 1]} ${y}`
 	}
 	if (agg === 'weekly') {
-		return key.replace('-', ' ')
+		const [y, w] = key.split('-W')
+		return `Week ${w}, ${y}`
+	}
+	if (agg === 'daily') {
+		const date = new Date(key)
+		return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 	}
 	return key
 }
+
 function clampDate(date) {
 	const d = new Date(date)
 	d.setHours(0, 0, 0, 0)
@@ -99,7 +105,7 @@ export default function ShowExpenses() {
 			setEditing(null)
 			fetchExpenses()
 		} catch (err) {
-			console.error(err)
+			console.error("Update error:", err)
 			toast.error?.(err?.response?.data?.message || 'Failed to update')
 		}
 	}
@@ -111,7 +117,7 @@ export default function ShowExpenses() {
 			toast.success?.('Expense deleted')
 			fetchExpenses()
 		} catch (err) {
-			console.error(err)
+			console.error("Delete error:", err)
 			toast.error?.(err?.response?.data?.message || 'Failed to delete')
 		}
 	}

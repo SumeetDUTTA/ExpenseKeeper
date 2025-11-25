@@ -32,6 +32,7 @@ export default function Profile() {
 			setMonthlyBudget(userData.monthlyBudget || "");
 			setUserType(userData.userType || "");
 		} catch (error) {
+			console.error("Fetch profile error:", error);
 			toast.error(error.response?.data?.message || "Failed to fetch profile");
 		} finally {
 			setLoading(false);

@@ -126,7 +126,7 @@ UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 CORS_ORIGIN=http://localhost:5173
 
 # ML API
-ML_API_URL=http://localhost:8000
+ML_API_URL=http://127.0.0.1:8000
 ```
 
 ### Running the Application
@@ -351,10 +351,13 @@ class ApiError extends Error {
 
 The backend acts as a proxy to the Python ML API with enhanced error handling:
 
--   **Endpoint:** `POST /api/predict/expense`
+-   **Endpoint:** `POST /api/predict`
+-   **Caching:** Redis-backed response caching (production only) to reduce ML API load and improve response times
 -   **Error Handling:** Catches ML API failures, returns user-friendly errors
+-   **Fallback Logic:** Uses simple averaging when insufficient data for ML predictions (< 3 months)
 -   **Authentication:** User must be authenticated; user_id injected from JWT token
 -   **Validation:** Request body validated with Zod schema before forwarding
+-   **Smart Guardrails:** ML predictions include 15% max change constraints for fixed-cost categories (Rent, Personal Care)
 
 ## 🧑‍💻 Author
 

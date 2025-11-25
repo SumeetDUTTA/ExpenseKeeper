@@ -77,7 +77,7 @@ ExpenseKeeper combines traditional expense management with predictive analytics 
    MONGODB_URI=your_mongodb_connection_string
    JWT_SECRET=your_jwt_secret_key
    PORT=5000
-   ML_API_URL=http://localhost:8000
+   ML_API_URL=http://127.0.0.1:8000
    UPSTASH_REDIS_REST_URL=your_upstash_redis_url
    UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
    ```
@@ -89,7 +89,8 @@ ExpenseKeeper combines traditional expense management with predictive analytics 
    ```
    Create a `.env` file in `frontend/` with:
    ```
-   VITE_API_URL=http://localhost:5000/api
+   VITE_API_TARGET=http://localhost:5000
+   VITE_ML_API_URL=http://127.0.0.1:8000
    ```
 
 4. **ML Model Setup:**
@@ -107,7 +108,9 @@ Start all three services in separate terminals:
 1. **Backend:**
    ```bash
    cd backend
-   npm start
+   npm run dev  # Development mode with hot-reload
+   # OR
+   npm start    # Production mode
    ```
 
 2. **Frontend:**
@@ -125,7 +128,7 @@ Start all three services in separate terminals:
 The application will be available at:
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:5000`
-- ML API: `http://localhost:8000`
+- ML API: `http://127.0.0.1:8000`
 
 ## Core Features
 
@@ -133,6 +136,7 @@ The application will be available at:
 - **Marketing Home Page:** Dedicated landing page for new visitors explaining features, workflow, and technology stack
 - **Auto-redirect:** Authenticated users automatically redirected to dashboard
 - **Secure Authentication:** JWT-based signup/login with bcrypt password hashing
+- **Server Health Checks:** Automatic health checks for backend and ML server with user-friendly wait notifications (30s backend, 45s ML server) to handle Render's auto-sleep behavior
 
 ### User Management
 - **User Profiles:** Customizable profiles with monthly budget settings and user type selection (college student, young professional, family moderate/high, luxury lifestyle, senior retired)
@@ -162,25 +166,31 @@ The application will be available at:
 - **Category-Level Predictions:** Individual forecasts per expense category
 - **Budget-Aware Models:** Predictions adapt to user's monthly budget and spending profile
 - **User Archetypes:** Model trained on 6 user types (college student, young professional, family moderate/high, luxury lifestyle, senior retired)
-- **Confidence Bounds:** Visual indicators for prediction reliability
+- **Smart Guardrails:** 15% maximum month-over-month change constraint for fixed-cost categories (Rent, Personal Care) to ensure realistic predictions
+- **Production Caching:** Redis-backed response caching in production (disabled in development) for improved performance
 
 ## Machine Learning Details
 
 The prediction engine uses a universal XGBoost model trained on synthetic transaction data covering multiple user profiles and budget ranges (₹3,000 - ₹60,000/month).
 
-**Features (33 total):**
-- Time-series signals: 1/2/3/12-month lags, 3/6/12-month rolling averages
+**Features (36 total):**
+- Time-series signals: 1/2/3/12-month lags, 3/6/12-month rolling averages, Rolling3_Median, Volatility_6
 - Trend indicators: 3-month trend, percentage change
-- Calendar features: month number, sine/cosine seasonality
-- Budget context: log budget, budget category buckets, spend-to-budget ratio
+- Calendar features: month number, sine/cosine seasonality, is_festival_season
+- Budget context: log budget, budget category buckets, spend-to-budget ratio, category_ratio
 - Behavioral mix: category one-hot encodings, user type encodings, category share of total spend
 
 **Performance:**
-- MAE (rupees): ₹1,145.08 - Average absolute rupee error per month
-- RMSE (rupees): ₹2,145.47 - Root mean squared error
-- Model Accuracy: ~89-91% across different user types and budget ranges
+- MAE (rupees): ₹863.13 - Average absolute rupee error per month
+- RMSE (rupees): ₹1,771.70 - Root mean squared error
+- Model Accuracy: ~89-92% across different user types and budget ranges
 - Handles diverse spending patterns from ₹3,000 to ₹60,000 monthly budgets
-- Optimized with Optuna (690 trees, depth 6, learning rate 0.0308)
+- Optimized with Optuna (513 trees, depth 12, learning rate 0.0551)
+
+**Smart Guardrails:**
+- **Fixed-Cost Categories (Rent, Personal Care):** Maximum 15% month-over-month change to prevent unrealistic predictions
+- **Variable Categories (Food & Drink, Entertainment, Travel, etc.):** Outlier prevention with 0.3x to 2x recent average bounds
+- **Zero-value Handling:** Model predictions trusted when previous month is ₹0
 
 See `mlModel/README.md` for detailed ML documentation.
 
@@ -189,6 +199,7 @@ See `mlModel/README.md` for detailed ML documentation.
 ### Backend (Express)
 - `POST /api/auth/signup` - User registration
 - `POST /api/auth/login` - User login
+- `GET /api/auth/health` - Backend health check endpoint
 - `GET /api/expenses` - Get all user expenses (with optional filters)
 - `POST /api/expenses` - Create new expense
 - `PATCH /api/expenses/:id` - Update expense
@@ -196,10 +207,11 @@ See `mlModel/README.md` for detailed ML documentation.
 - `GET /api/user/profile` - Get user profile
 - `PATCH /api/user/profile` - Update user profile
 - `PATCH /api/user/meta` - Update user metadata (budget, user type)
+- `POST /api/predict` - ML prediction proxy with Redis caching (production only)
 
 ### ML API (FastAPI)
-- `GET /` - Health check endpoint
-- `POST /predict-expense` - Get expense predictions for multiple months and categories
+- `GET /docs` - Defauld FastAPI endpoint
+- `POST /predict` - Get expense predictions with smart guardrails for multiple months and categories
 
 ## Development
 
@@ -208,6 +220,30 @@ See `mlModel/README.md` for detailed ML documentation.
 - Backend: Zod schema validation, error middleware
 - Consistent design tokens across CSS modules
 - Accessible UI with ARIA labels
+
+### Environment Variables
+
+**Backend (.env):**
+```env
+NODE_ENV=development           # Set to 'production' to enable Redis caching
+PORT=5000
+MONGODB_URI=your_mongodb_uri
+JWT_SECRET=your_jwt_secret
+ML_API_URL=http://127.0.0.1:8000
+UPSTASH_REDIS_REST_URL=your_redis_url
+UPSTASH_REDIS_REST_TOKEN=your_redis_token
+CORS_ORIGIN=http://localhost:5173
+```
+
+**Frontend (.env):**
+```env
+VITE_API_TARGET=http://localhost:5000      # Backend API URL
+VITE_ML_API_URL=http://127.0.0.1:8000      # ML API URL (optional, falls back to localhost:8000)
+```
+
+**ML Model:**
+- No environment variables required for local development
+- Uses port 8000 by default
 
 ### Testing
 Run frontend dev server with hot reload:
@@ -220,6 +256,11 @@ Build for production:
 ```bash
 npm run build
 ```
+
+### Development Notes
+- Redis caching is **disabled** in development (`NODE_ENV !== 'production'`) for faster iteration
+- Health checks automatically handle Render's server sleep with 30-45 second wait notifications
+- ML server health checks have longer timeouts (8s vs 5s) due to model loading overhead
 
 ## Contributing
 

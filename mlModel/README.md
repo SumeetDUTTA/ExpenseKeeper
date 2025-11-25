@@ -57,7 +57,11 @@ TotalBudget: The user’s approximate monthly budget in rupees for that profile.
 For training, transactions are first aggregated into monthly totals per Category, UserType, and TotalBudget. From these monthly series the pipeline builds lag features (previous months’ spending), rolling averages, seasonal signals (month number, sine/cosine), budget-related features (log budget, budget category buckets), and ratios like category share of total monthly spend. The target variable is the next month’s log-transformed total spending per category, so the task is a time-series regression predicting future monthly expense from historical behavior and budget context.
 - **Source:** Custom synthetic dataset
 - **Location:** `training_data.csv`
-- **Description:** The feature set is built from monthly, per‑category aggregates and includes time‑series signals (lags over 1, 2, 3, and 12 months; rolling 3/6/12‑month averages; 3‑month trend; percent change), calendar features (month number plus sine/cosine seasonality), budget context (log of the user's total monthly budget, bucketed budget category, spend‑to‑budget ratio), and behavior mix (category one‑hot encodings, user type one‑hot encodings, and each category's share of the user's monthly total). The target variable is the next month's log‑transformed total spend for each category and user type, so the model learns to regress from historical behavior and budget context to future monthly expense in rupees.
+- **Features:** 36 engineered features including:
+  - Time-series: lag_1, lag_2, lag_3, lag_12, Rolling3, Rolling6, Rolling12, Rolling3_Median, Volatility_6, trend_3, pct_change
+  - Calendar: month_num, month_sin, month_cos, is_festival_season
+  - Budget: log_total_budget, spend_ratio, category_ratio
+  - One-hot encoded: 7 categories, 6 user types, 5 budget categories
 - **Preprocessing:** During preprocessing, raw transactions are parsed to valid dates, lower‑cased and cleaned category/type labels, and filtered to keep only expense rows. Transactions are then aggregated to monthly totals per Category, UserType, and TotalBudget. The pipeline log‑transforms monetary amounts to stabilize variance, engineers lagged values and rolling averages, and computes trend and percentage‑change statistics. It derives calendar features from the date (month number plus sine/cosine encoding), encodes categorical fields (Category, UserType, budget bucket) using one‑hot encoding, and creates budget‑aware ratios such as spend‑to‑budget and category share of total monthly spend. Rows with insufficient history for the required lags are dropped so the model always trains on complete feature vectors.
 
 ## Model
@@ -95,25 +99,38 @@ cd mlModel
 uvicorn ml_api:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API will be available at `http://localhost:8000`.
+The API will be available at `http://127.0.0.1:8000`.
 
 **API Endpoints:**
-- `GET /` - Health check endpoint
-- `POST /predict-expense` - Get expense predictions
+- `POST /predict` - Batch category predictions with smart guardrails
+- `POST /predict_timeseries` - Single time-series predictions
 
 **Example Request:**
 ```bash
-curl -X POST "http://localhost:8000/predict-expense" \
+curl -X POST "http://127.0.0.1:8000/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "horizon": 3,
     "user_total_budget": 50000,
     "user_type": "young_professional",
-    "history": {
-      "Food & Drink": [15000, 14500, 16000],
-      "Travel": [5000, 4800, 5200]
+    "categories": {
+      "Food & Drink": [15000, 14500, 16000, 15200, 14800],
+      "Travel": [5000, 4800, 5200, 4900, 5100],
+      "Rent": [18000, 18000, 18000, 18000, 18000]
     }
   }'
+```
+
+**Response Format:**
+```json
+{
+  "categories": {
+    "Food & Drink": [15100.23, 15250.45, 15400.67],
+    "Travel": [5050.12, 5100.34, 5150.56],
+    "Rent": [18000.00, 18000.00, 18000.00]
+  },
+  "total_predicted_expense_rupees": [38150.35, 38350.79, 38551.23]
+}
 ```
 
 ### Using the Prediction Script
@@ -137,9 +154,10 @@ features = model_data['features']
 
 # Prepare your feature vector (must match training features)
 # Features include: lag_1, lag_2, lag_3, lag_12, Rolling3, Rolling6, Rolling12,
-# trend_3, pct_change, month_num, month_sin, month_cos, log_total_budget,
-# spend_ratio, category_ratio, and one-hot encoded categories/user types
-new_data = [[...]]  # 35 features matching the trained model
+# Rolling3_Median, Volatility_6, trend_3, pct_change, month_num, month_sin, 
+# month_cos, is_festival_season, log_total_budget, spend_ratio, category_ratio,
+# and one-hot encoded categories/user types/budget categories
+new_data = [[...]]  # 36 features matching the trained model
 
 # Make a prediction (returns log-transformed amount)
 prediction_log = model.predict(new_data)
@@ -158,21 +176,28 @@ print(f"Predicted expense: ₹{prediction_rupees[0]:.2f}")
 
 Model performance is reported directly from the training script rather than a separate `evaluate_model.py` file. After the train/test split, `train_model.py` computes error on the held‑out test set using:
 
-- **MAE (log scale):** 0.6066 - Mean Absolute Error between predicted and true log‑amounts
-- **RMSE (log scale):** 0.7208 - Root Mean Squared Error on the log scale
-- **MAE (rupees):** ₹1,145.08 - Mean Absolute Error after converting predictions back to rupees, interpreted as the average absolute rupee error per month
-- **RMSE (rupees):** ₹2,145.47 - Root Mean Squared Error in rupees, which penalizes larger mistakes more strongly
+- **MAE (log scale):** 0.4826 - Mean Absolute Error between predicted and true log‑amounts
+- **RMSE (log scale):** 0.6215 - Root Mean Squared Error on the log scale
+- **MAE (rupees):** ₹863.13 - Mean Absolute Error after converting predictions back to rupees, interpreted as the average absolute rupee error per month
+- **RMSE (rupees):** ₹1,771.70 - Root Mean Squared Error in rupees, which penalizes larger mistakes more strongly
 
-**Model Accuracy:** ~89-91% - The model predicts expenses with high accuracy across different user types and budget ranges.
+**Model Accuracy:** ~89-92% - The model predicts expenses with high accuracy across different user types and budget ranges.
 
 **Optimized Hyperparameters:**
-- n_estimators: 690 trees
-- max_depth: 6 levels  
-- learning_rate: 0.0308
-- reg_lambda: 1.98 (L2 regularization)
-- reg_alpha: 0.48 (L1 regularization)
+- n_estimators: 513 trees
+- max_depth: 12 levels  
+- learning_rate: 0.0551
+- reg_lambda: 1.84 (L2 regularization)
+- reg_alpha: 0.90 (L1 regularization)
 
 It also prints the top contributing features based on XGBoost's feature importance.
+
+**Smart Guardrails:**
+The model includes intelligent guardrails to ensure realistic predictions:
+- **Step Categories (Rent, Personal Care):** Maximum 15% month-over-month change allowed
+- **Variable Categories (Food & Drink, Entertainment, Travel, etc.):** Outlier prevention (0.3x to 2x recent average)
+- **Zero-value handling:** When previous month is ₹0, model predictions are trusted without clamping
+
 To see these metrics, simply run:
 
 ```bash

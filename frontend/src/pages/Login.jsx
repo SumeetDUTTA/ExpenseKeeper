@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -33,6 +34,124 @@ export default function Login() {
 	const [mode, setMode] = useState("signup");
 	const [showPassword, setShowPassword] = useState(false);
 	const [remember, setRemember] = useState(false);
+	const [serverChecking, setServerChecking] = useState(true);
+	const [serverAwake, setServerAwake] = useState(false);
+	const [mlServerChecking, setMlServerChecking] = useState(true)
+	const [mlServerAwake, setMlServerAwake] = useState(false)
+
+	// Check if backend server is awake on component mount
+	React.useEffect(() => {
+		async function checkMLServerHealth() {
+			try {
+				const controller = new AbortController();
+				const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for ML server
+
+				const mlApiUrl = import.meta.env.VITE_ML_API_URL || "http://localhost:8000";
+				const response = await fetch(`${mlApiUrl}/docs`, {
+					method: 'GET',
+					signal: controller.signal
+				});
+
+				clearTimeout(timeoutId);
+
+				if (response.ok) {
+					setMlServerAwake(true);
+				} else {
+					throw new Error('ML server not responding');
+				}
+			} catch (err) {
+				// ML server is sleeping or unreachable
+				setMlServerAwake(false);
+				toast.loading(
+					'ML prediction server is starting up. This may take 40-60 seconds. Please wait...',
+					{
+						duration: 50000,
+						icon: '🤖',
+						id: 'ml-server-wake-toast'
+					}
+				);
+
+				// Retry after 45 seconds
+				setTimeout(async () => {
+					try {
+						const mlApiUrl = import.meta.env.VITE_ML_API_URL || "http://localhost:8000";
+						const retryResponse = await fetch(`${mlApiUrl}/docs`);
+						if (retryResponse.ok) {
+							setMlServerAwake(true);
+							toast.dismiss('ml-server-wake-toast');
+							toast.success('ML server is ready! You can now generate predictions.');
+						} else {
+							toast.dismiss('ml-server-wake-toast');
+							toast.error('ML server is still starting. Please wait a bit longer and refresh.');
+						}
+					} catch {
+						toast.dismiss('ml-server-wake-toast');
+						toast.error('Unable to reach ML server. Please check your connection or try again later.');
+					}
+				}, 45000);
+			} finally {
+				setMlServerChecking(false);
+			}
+		}
+
+		checkMLServerHealth();
+	}, []);
+
+	React.useEffect(() => {
+
+		async function checkServerHealth() {
+			try {
+				const controller = new AbortController();
+				const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+				const response = await fetch(`${import.meta.env.VITE_API_TARGET || "http://localhost:5000"}/health`, {
+					method: 'GET',
+					signal: controller.signal
+				});
+
+				clearTimeout(timeoutId);
+
+				if (response.ok) {
+					setServerAwake(true);
+				} else {
+					throw new Error('Server not responding');
+				}
+			} catch (error) {
+				// Server is sleeping or unreachable
+				setServerAwake(false);
+				toast.loading(
+					'Backend server is starting up. Please wait 30-45 seconds...',
+					{
+						duration: 35000,
+						icon: '⏳',
+						id: 'server-wake-toast'
+					}
+				);
+
+				// Retry after 30 seconds
+				setTimeout(async () => {
+					try {
+						const retryResponse = await fetch(`${import.meta.env.VITE_API_TARGET || "http://localhost:5000"}/health`);
+						if (retryResponse.ok) {
+							setServerAwake(true);
+							toast.dismiss('server-wake-toast');
+							toast.success('Server is ready! You can now login or signup.');
+						} else {
+							toast.dismiss('server-wake-toast');
+							toast.error('Server is still waking up. Please try again in a moment.');
+						}
+					} catch {
+						toast.dismiss('server-wake-toast');
+						toast.error('Unable to reach server. Please check your connection.');
+					}
+				}, 30000);
+			} finally {
+				setServerChecking(false);
+			}
+		}
+
+		checkServerHealth();
+	}, []);
 
 	// Derived validation flags (displayed live)
 	const validations = useMemo(() => {
@@ -66,6 +185,23 @@ export default function Login() {
 			return;
 		}
 
+		// Check if ML server is awake before attempting prediction
+		if (!mlServerAwake) {
+			toast.error("ML server is still starting up. Please wait a moment and try again.", {
+				duration: 5000,
+				icon: '⏳'
+			});
+			return;
+		}
+
+		// Check if server is awake before attempting login/signup
+		if (!serverAwake) {
+			toast.error("Backend server is still starting. Please wait a moment and try again.", {
+				duration: 5000
+			});
+			return;
+		}
+
 		setLoading(true);
 		try {
 			if (mode === "signup") {
@@ -73,7 +209,8 @@ export default function Login() {
 				// server may return structured validation error - show it
 				if (res?.data?.success === false && res?.data?.errors) {
 					const serverMsg = res.data.errors.map(e => e.message).join(" ");
-					toast.error(serverMsg);
+					console.error(serverMsg);
+					toast.error("Server validation error. Please check your input.");
 					setLoading(false);
 					return;
 				}
@@ -90,9 +227,11 @@ export default function Login() {
 			const fieldErrors = err?.response?.data?.errors;
 			if (fieldErrors && Array.isArray(fieldErrors)) {
 				const serverMsg = fieldErrors.map(e => e.message).join(" ");
-				toast.error(serverMsg);
+				console.error("Field errors:", serverMsg);
+				toast.error("Server validation error. Please check your input.");
 			} else if (serverMessage) {
-				toast.error(serverMessage);
+				console.error("Server error:", serverMessage);
+				toast.error("Server validation error. Please check your input.");
 			} else {
 				toast.error("Something went wrong");
 			}
@@ -101,12 +240,14 @@ export default function Login() {
 		}
 	}
 
-	if (loading) {
+	if (loading || serverChecking || mlServerChecking) {
 		return (
 			<div className="loader-screen" role="status" aria-live="polite">
 				<div style={{ textAlign: 'center' }}>
 					<LoaderCircle size={48} className="animate-spin" />
-					<div style={{ marginTop: 8, color: 'var(--muted)' }}>Loading Dashboard...</div>
+					<div style={{ marginTop: 8, color: 'var(--muted)' }}>
+						{serverChecking ? 'Checking server status...' : 'Loading Dashboard...'}
+					</div>
 				</div>
 			</div>
 		);
@@ -244,10 +385,25 @@ export default function Login() {
 						<button
 							className="submit"
 							type="submit"
-							disabled={!isValid()}
+							disabled={!isValid() || !serverAwake}
 						>
 							{mode === "signup" ? "Create account" : "Login"}
 						</button>
+
+						{/* Server status indicator */}
+						{!serverAwake && !serverChecking && (
+							<div style={{
+								padding: '12px',
+								borderRadius: '8px',
+								background: 'rgba(251, 191, 36, 0.1)',
+								border: '1px solid rgba(251, 191, 36, 0.3)',
+								fontSize: '14px',
+								color: 'var(--text-primary)',
+								textAlign: 'center'
+							}}>
+								⏳ Server is waking up. Please wait...
+							</div>
+						)}
 					</form>
 
 				</section>

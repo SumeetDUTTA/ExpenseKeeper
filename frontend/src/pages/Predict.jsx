@@ -1,10 +1,11 @@
+/* eslint-disable no-unused-vars */
 import React, { useState } from "react";
 import { TrendingUp, Calendar, DollarSign, BarChart3, Eye, EyeOff, Sparkles, LoaderCircle } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
 import toast from "react-hot-toast";
 
 import api from "../lib/api";
-import "../styles/Predict.css"; // Replace with the provided CSS below
+import "../styles/Predict.css";
 
 function normalizeTotalPrediction(tp) {
 	try {
@@ -38,9 +39,79 @@ export default function Predict() {
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState(null)
 	const [showBreakdown, setShowBreakdown] = useState(false)
+	const [mlServerChecking, setMlServerChecking] = useState(true)
+	const [mlServerAwake, setMlServerAwake] = useState(false)
+
+	// Check if ML server is awake on component mount
+	React.useEffect(() => {
+		async function checkMLServerHealth() {
+			try {
+				const controller = new AbortController();
+				const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for ML server
+
+				const mlApiUrl = import.meta.env.VITE_ML_API_URL || "http://localhost:8000";
+				const response = await fetch(`${mlApiUrl}/docs`, {
+					method: 'GET',
+					signal: controller.signal
+				});
+
+				clearTimeout(timeoutId);
+
+				if (response.ok) {
+					setMlServerAwake(true);
+				} else {
+					throw new Error('ML server not responding');
+				}
+			} catch (err) {
+				// ML server is sleeping or unreachable
+				setMlServerAwake(false);
+				toast.loading(
+					'ML prediction server is starting up. This may take 40-60 seconds. Please wait...',
+					{
+						duration: 50000,
+						icon: '🤖',
+						id: 'ml-server-wake-toast'
+					}
+				);
+
+				// Retry after 45 seconds
+				setTimeout(async () => {
+					try {
+						const mlApiUrl = import.meta.env.VITE_ML_API_URL || "http://localhost:8000";
+						const retryResponse = await fetch(`${mlApiUrl}/docs`);
+						if (retryResponse.ok) {
+							setMlServerAwake(true);
+							toast.dismiss('ml-server-wake-toast');
+							toast.success('ML server is ready! You can now generate predictions.');
+						} else {
+							toast.dismiss('ml-server-wake-toast');
+							toast.error('ML server is still starting. Please wait a bit longer and refresh.');
+						}
+					} catch {
+						toast.dismiss('ml-server-wake-toast');
+						toast.error('Unable to reach ML server. Please check your connection or try again later.');
+					}
+				}, 45000);
+			} finally {
+				setMlServerChecking(false);
+			}
+		}
+
+		checkMLServerHealth();
+	}, []);
 
 	async function submit(e) {
 		e && e.preventDefault()
+
+		// Check if ML server is awake before attempting prediction
+		if (!mlServerAwake) {
+			toast.error("ML server is still starting up. Please wait a moment and try again.", {
+				duration: 5000,
+				icon: '⏳'
+			});
+			return;
+		}
+
 		setLoading(true)
 		setError(null)
 		try {
@@ -53,7 +124,8 @@ export default function Predict() {
 			const errorMsg = e.response?.data?.message || e.message
 			setError(errorMsg)
 			setResult(null)
-			toast.error(errorMsg)
+			console.error('Prediction error:',errorMsg)
+			toast.error("Prediction failed. Please try again.")
 		} finally {
 			setLoading(false)
 		}
@@ -117,6 +189,35 @@ export default function Predict() {
 
 	return (
 		<div className="predict-page-container">
+			{/* Loading overlay while checking ML server */}
+			{mlServerChecking && (
+				<div style={{
+					position: 'fixed',
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					background: 'rgba(0, 0, 0, 0.5)',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					zIndex: 9999
+				}}>
+					<div style={{
+						background: 'var(--card-bg)',
+						padding: '32px',
+						borderRadius: '12px',
+						textAlign: 'center',
+						boxShadow: 'var(--shadow-lg)'
+					}}>
+						<LoaderCircle size={48} className="animate-spin" style={{ margin: '0 auto' }} />
+						<div style={{ marginTop: '16px', color: 'var(--text-primary)' }}>
+							Checking ML server status...
+						</div>
+					</div>
+				</div>
+			)}
+
 			{/* Header */}
 			<header className="predict-page-header card-surface">
 				<div className="header-left">
@@ -161,7 +262,7 @@ export default function Predict() {
 						</div>
 					</div>
 
-					<button type="submit" className="page-button primary" disabled={loading}>
+					<button type="submit" className="page-button primary" disabled={loading || !mlServerAwake}>
 						{loading ? (
 							<div className="btn-loader">
 								<LoaderCircle size={18} className="animate-spin" />
@@ -174,6 +275,22 @@ export default function Predict() {
 							</>
 						)}
 					</button>
+
+					{/* ML Server status indicator */}
+					{!mlServerAwake && !mlServerChecking && (
+						<div style={{
+							padding: '12px',
+							borderRadius: '8px',
+							background: 'rgba(251, 191, 36, 0.1)',
+							border: '1px solid rgba(251, 191, 36, 0.3)',
+							fontSize: '14px',
+							color: 'var(--text-primary)',
+							textAlign: 'center',
+							marginTop: '12px'
+						}}>
+							🤖 ML server is starting up. Please wait...
+						</div>
+					)}
 				</form>
 
 				{/* Quick stats card (skeleton if loading) */}

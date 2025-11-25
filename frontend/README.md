@@ -10,6 +10,7 @@ The ExpenseKeeper frontend is a modern, responsive single-page application that 
 
 -   **Landing Page:** Modern, informative home page for new users with project overview, features showcase, and step-by-step guide
 -   **User Authentication:** JWT-based secure login and registration with persistent session management via Context API and localStorage
+-   **Server Health Checks:** Automatic backend and ML server health checks with user-friendly toast notifications (30s backend, 45s ML server) to handle Render's auto-sleep behavior
 -   **Responsive Design:** Mobile-first design using TailwindCSS and DaisyUI, fully responsive across desktop (1920px+), tablet (768px-1024px), and mobile (320px-768px) viewports
 -   **Component-Based Architecture:** Modular React components with clear separation of concerns (pages, components, contexts, utilities)
 -   **State Management:** React Context API for global auth state; local state management with hooks for component-specific data
@@ -103,7 +104,7 @@ Follow these instructions to get the frontend running locally.
 -   Node.js (v16 or later)
 -   npm or yarn
 -   Backend API running on `http://localhost:5000` (see backend README)
--   ML API running on `http://localhost:8000` (see mlModel README)
+-   ML API running on `http://127.0.0.1:8000` (see mlModel README)
 
 ### Installation
 
@@ -122,10 +123,15 @@ Follow these instructions to get the frontend running locally.
 
 ### Configuration
 
-No `.env` file needed for frontend by default. API URLs are configured in `src/lib/api.js`:
--   Backend API: `http://localhost:5000/api`
+Create a `.env` file in the frontend directory (optional):
+```env
+VITE_API_TARGET=http://localhost:5000
+VITE_ML_API_URL=http://127.0.0.1:8000
+```
 
-To change API endpoints, edit `src/lib/api.js`.
+If no `.env` file is provided, the app defaults to `http://localhost:5000` for the backend API and `http://127.0.0.1:8000` for the ML API.
+
+API configuration is handled in `src/lib/api.js` using the `VITE_API_TARGET` environment variable.
 
 ### Running the Application
 
@@ -161,14 +167,15 @@ Users can switch between light and dark themes using the sun/moon icon in the na
 
 1.  New user visits `/` → Sees landing page with project overview and features
 2.  User clicks "Get Started" or "Login" → Redirected to `/login`
-3.  User registers or logs in → Backend validates → Returns JWT token
-4.  Token stored in localStorage and AuthContext
-5.  User auto-redirected to `/dashboard` after successful login
-6.  Protected routes check auth status → Redirect to `/login` if unauthenticated
-7.  All API requests include `Authorization: Bearer <token>` header
-8.  Token refresh handled by backend (7-day expiry)
-9.  Logout clears localStorage and redirects to login
-10. Authenticated users trying to access `/` are auto-redirected to `/dashboard`
+3.  Login page checks backend health (`/health`) → Shows 35-second wait toast if server sleeping → Auto-retries after 30 seconds
+4.  User registers or logs in → Backend validates → Returns JWT token
+5.  Token stored in localStorage and AuthContext
+6.  User auto-redirected to `/dashboard` after successful login
+7.  Protected routes check auth status → Redirect to `/login` if unauthenticated
+8.  All API requests include `Authorization: Bearer <token>` header
+9.  Token refresh handled by backend (7-day expiry)
+10. Logout clears localStorage and redirects to login
+11. Authenticated users trying to access `/` are auto-redirected to `/dashboard`
 
 ## 📊 Key Pages
 
@@ -203,10 +210,16 @@ Users can switch between light and dark themes using the sun/moon icon in the na
 -   Edit/delete actions with confirmation dialogs
 
 ### Predict (`/predict`)
--   ML-powered expense forecasting for 1-6 months
--   Interactive sliders for monthly budget, spending behavior, category distribution
--   Category-wise prediction breakdown with percentages
--   Confidence indicator based on historical data
+-   ML server health check on page load with 50-second wait toast if server sleeping
+-   Automatic retry after 45 seconds with success notification
+-   Full-screen loading overlay during ML server initialization
+-   ML-powered expense forecasting for 1-3 months ahead
+-   User budget and profile configuration with popup modal
+-   Category-wise prediction breakdown with visual progress bars
+-   Monthly predictions showing expected spending per category
+-   Total predicted expense summary with comparison to budget
+-   Smart guardrails ensure realistic predictions (15% max change for fixed costs)
+-   Predict button disabled until ML server is ready
 
 ### Profile (`/profile`)
 -   User info display (name, email, account creation date)
