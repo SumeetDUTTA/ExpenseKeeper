@@ -280,5 +280,5 @@ This project is for educational purposes. All rights reserved.
 
 **Author:** Sumeet Dutta and Sahil Kumar
 **Repository:** [ExpenseKeeper](https://github.com/SumeetDUTTA/ExpenseKeeper)
-**Website:** (https://expense-keeper-two.vercel.app/)
+**Website:** https://expense-keeper-two.vercel.app/
 
