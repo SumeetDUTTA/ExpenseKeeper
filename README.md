@@ -9,23 +9,23 @@ ExpenseKeeper combines traditional expense management with predictive analytics 
 ## Screenshots
 
 ### Dashboard
-![Dashboard Overview](images\Dashbord_1.png)
-![Dashboard Analytics](images\Dashboard_2.png)
+![Dashboard Overview](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Dashbord_1.png), 
+![Dashboard Analytics](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Dashboard_2.png)
 *Main dashboard showing monthly spending trends, category distribution, and analytics*
 
 ### Expense Management
-![Expense List](images\Expenses_2.png)
-![Expense Analytics](images\Expenses_1.png)
-![Add Expense](images\Add_Expenses.png)
+![Expense List](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Expenses_2.png), 
+![Expense Analytics](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Expenses_1.png), 
+![Add Expense](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Add_Expenses.png)
 *Comprehensive expense tracking with search, filter, and analytics features*
 
 ### AI Predictions
-![Prediction Interface](images\Predict_1.png)
-![By Category Predictions](images\Predict_2.png)
+![Prediction Interface](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Predict_1.png), 
+![By Category Predictions](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Predict_2.png)
 *ML-powered expense forecasting with category-wise breakdown*
 
 ### Profile Management
-![Profile Settings](images\Profile.png)
+![Profile Settings](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Profile.png)
 *User profile customization with budget and preferences*
 
 ## Technologies Used
