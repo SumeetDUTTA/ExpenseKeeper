@@ -34,35 +34,18 @@ function AuthProvider({ children }) {
 
     async function login(credentials) {
         try {
-            const res = await api.post("/api/auth/login", credentials).
-                // then(r => console.log('Login response:', r) || r).
-                catch(err => {
-                    console.error('Login error full:', err);
-                    if (err.response) {
-                        console.error('status', err.response.status);
-                        console.error('response.data', err.response.data);
-                        console.error('response.headers', err.response.headers);
-                    } else {
-                        console.error('no response, network error or CORS', err.message);
-                    }
-                });
-
+            const res = await api.post("/api/auth/login", credentials);
             if (res.data && res.data.token) {
                 setToken(res.data.token);
                 setUser(res.data.user);
             } else {
-                console.error('🔥 Login failed: No token in response', res);
                 toast.error('Login failed: Invalid response from server.');
             }
             return res;
         } catch (error) {
-            console.error('🔥 Login error object:', error);
             if (error.response) {
-                console.error('🔥 error.response.status', error.response.status);
-                console.error('🔥 error.response.data', error.response.data);
                 toast.error(`Login failed: ${error.response.data?.message ?? error.message}`);
             } else {
-                console.error('🔥 Login error message:', error.message);
                 toast.error(`Login failed: ${error.message}`);
             }
         }
@@ -70,24 +53,56 @@ function AuthProvider({ children }) {
 
     async function register(payload) {
         try {
-            const res = await api.post("/api/auth/register", payload)
+            const res = await api.post("/api/auth/register", payload);
             if (res.data && res.data.token) {
                 setToken(res.data.token);
                 setUser(res.data.user);
             }
             return res;
         } catch (error) {
-            console.error('🔥 Register error object:', error);
             if (error.response) {
-                console.error('🔥 error.response.status', error.response.status);
-                console.error('🔥 error.response.data', error.response.data);
                 toast.error(`Register failed: ${error.response.data?.message ?? error.message}`);
             } else {
-                console.error('🔥 Register error message:', error.message);
                 toast.error(`Register failed: ${error.message}`);
             }
         }
 
+    }
+
+    async function loginWithGoogle(idToken) {
+        try {
+            const res = await api.post("/api/auth/google", { idToken });
+            if (res.data?.token) {
+                setToken(res.data.token);
+                setUser(res.data.user);
+                toast.success("Logged in with Google successfully!");
+                return res;
+            } else {
+                throw new Error("No token in Google login response");
+            }
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || error.message;
+            toast.error(`Google Login failed: ${errorMsg}`);
+        }
+    }
+
+    async function loginWithDiscord(code) {
+        try {
+            const res = await api.post("/api/auth/discord", { code });
+            console.log("Discord login response:", res.data);
+            if (res.data?.token && res.data?.user) {
+                setToken(res.data.token);
+                setUser(res.data.user);
+                toast.success("Logged in with Discord successfully!");
+                return res;
+            } else {
+                console.error("Invalid Discord login response:", res.data);
+                throw new Error("No token or user in Discord login response");
+            }
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || error.message;
+            toast.error(`Discord Login failed: ${errorMsg}`);
+        }
     }
 
     function logout() {
@@ -97,7 +112,7 @@ function AuthProvider({ children }) {
         localStorage.removeItem("user");
     }
     return (
-        <AuthContext.Provider value={{ token, user, login, register, logout }}>
+        <AuthContext.Provider value={{ token, user, login, register, loginWithGoogle, loginWithDiscord, logout, setToken, setUser }}>
             {children}
         </AuthContext.Provider>
     )

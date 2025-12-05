@@ -1,12 +1,17 @@
-import React from 'react';
+import React, {useState, useRef} from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/authContext';
 import axios from 'axios';
+import toast from 'react-hot-toast';
+import emailjs from '@emailjs/browser';
+
+import { useAuth } from '../contexts/authContext';
 import '../styles/homePage.css';
 
 export default function HomePage() {
   const { token } = useAuth();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const formRef = useRef();
 
   // Wake up backend server on Render
   React.useEffect(() => {
@@ -31,6 +36,70 @@ export default function HomePage() {
     }
   }, [token, navigate]);
 
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    const loadingToast = toast.loading('Sending your message...');
+
+    try {
+      // EmailJS configuration
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+      if (!serviceId || !templateId || !publicKey) {
+        throw new Error('EmailJS configuration missing');
+      }
+
+      const result = await emailjs.sendForm(
+        serviceId,
+        templateId,
+        formRef.current,
+        publicKey
+      );
+
+      toast.dismiss(loadingToast);
+      
+      if (result.text === 'OK') {
+        toast.success('Message sent successfully! We\'ll get back to you soon.', {
+          duration: 5000,
+          icon: '✉️'
+        });
+        formRef.current.reset();
+      }
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      
+      // Check if it's a rate limit error (EmailJS quota exceeded)
+      if (error.status === 402 || error.text?.includes('quota') || error.text?.includes('limit')) {
+        toast.error(
+          'Our monthly email limit has been reached. Please try contacting us via email directly at sumeetdutta040@gmail.com or try again next month.',
+          {
+            duration: 8000,
+            icon: '⚠️'
+          }
+        );
+      } else if (!import.meta.env.VITE_EMAILJS_SERVICE_ID) {
+        // Configuration error
+        toast.error(
+          'Email service is not configured. Please contact us directly at sumeetdutta040@gmail.com',
+          { duration: 6000 }
+        );
+      } else {
+        // Generic error
+        toast.error(
+          'Failed to send message. Please try emailing us directly at sumeetdutta040@gmail.com',
+          { duration: 6000 }
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="home-page-container">
       {/* Hero Section */}
@@ -43,7 +112,7 @@ export default function HomePage() {
           <div className="nav-links">
             <a href="#features" className="nav-link">Features</a>
             <a href="#how-it-works" className="nav-link">How It Works</a>
-            <a href="#get-started" className="nav-link">Get Started</a>
+            <a href="#contact" className="nav-link">Contact</a>
             <Link to="/login" className="btn btn-primary">Login</Link>
           </div>
         </nav>
@@ -265,6 +334,112 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Contact Us Section */}
+      <section id="contact" className="contact-section">
+        <div className="container">
+          <h2 className="section-title">Get In Touch</h2>
+          <p className="section-subtitle">Have questions? We'd love to hear from you</p>
+          
+          <div className="contact-content">
+            <div className="contact-info">
+              <div className="contact-item">
+                <div className="contact-icon">📧</div>
+                <div className="contact-details">
+                  <h4>Email</h4>
+                  <a href="mailto:sumeetdutta040@gmail.com">sumeetdutta040@gmail.com</a>
+                </div>
+              </div>
+              
+              <div className="contact-item">
+                <div className="contact-icon">💬</div>
+                <div className="contact-details">
+                  <h4>Live Chat</h4>
+                  <p>Available Saturday - Sunday, 9AM - 5PM IST</p>
+                </div>
+              </div>
+              
+              <div className="contact-item">
+                <div className="contact-icon">🐛</div>
+                <div className="contact-details">
+                  <h4>Report Issues</h4>
+                  <a href="https://github.com/SumeetDUTTA/ExpenseKeeper/issues" target="_blank" rel="noopener noreferrer">GitHub Issues</a>
+                </div>
+              </div>
+              
+              <div className="contact-item">
+                <div className="contact-icon">🌐</div>
+                <div className="contact-details">
+                  <h4>Social Media</h4>
+                  <div className="social-links">
+                    <a href="https://github.com/SumeetDUTTA/ExpenseKeeper" target="_blank" rel="noopener noreferrer">GitHub</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="contact-form-wrapper">
+              <form ref={formRef} className="contact-form" onSubmit={handleContactSubmit}>
+                <div className="form-group">
+                  <label htmlFor="contact-name">Name</label>
+                  <input 
+                    type="text" 
+                    id="contact-name"
+                    name="from_name"
+                    placeholder="Your name" 
+                    required 
+                    disabled={isSubmitting}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="contact-email">Email</label>
+                  <input 
+                    type="email" 
+                    id="contact-email"
+                    name="from_email"
+                    placeholder="your.email@example.com" 
+                    required 
+                    disabled={isSubmitting}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="contact-subject">Subject</label>
+                  <input 
+                    type="text" 
+                    id="contact-subject"
+                    name="subject"
+                    placeholder="What's this about?" 
+                    required 
+                    disabled={isSubmitting}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="contact-message">Message</label>
+                  <textarea 
+                    id="contact-message"
+                    name="message"
+                    rows="5" 
+                    placeholder="Tell us more..." 
+                    required
+                    disabled={isSubmitting}
+                  ></textarea>
+                </div>
+                
+                <button 
+                  type="submit" 
+                  className="btn btn-large btn-primary"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section id="get-started" className="cta-section">
         <div className="container">
@@ -298,7 +473,7 @@ export default function HomePage() {
               <ul>
                 <li><Link to="/login">Login</Link></li>
                 <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="#get-started">Get Started</a></li>
+                <li><a href="#contact">Contact Us</a></li>
               </ul>
             </div>
           </div>

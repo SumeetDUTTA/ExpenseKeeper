@@ -45,3 +45,4 @@ dist-ssr
 *.sln
 *.sw?
 
+client_secret_google.json

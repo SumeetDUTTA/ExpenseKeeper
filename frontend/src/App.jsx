@@ -14,6 +14,7 @@ import { useAuth } from "./contexts/authContext";
 import NavBar from "./components/navBar";
 import AddExpense from "./pages/addExpenses";
 import ErrorBoundary from "./components/ErrorBoundary";
+import DiscordCallback from "./components/DiscordCallback.jsx";
 
 function Private({ children }) {
   const { token } = useAuth()
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="/add-expense" element={<Private><AddExpense /></Private>} />
           <Route path="/predict" element={<Private><Predict /></Private>} />
           <Route path="/profile" element={<Private><Profile /></Private>} />
+          <Route path="/auth/discord/callback" element={<DiscordCallback />} />
         </Routes>
       </div>
     </ErrorBoundary>

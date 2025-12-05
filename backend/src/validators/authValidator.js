@@ -8,7 +8,8 @@ const registerSchema = z.object({
             .min(6, "Password must be at least 6 characters long")
             .max(100, "Password must be less than 100 characters")
             .regex(/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/, 
-                "Password must contain at least one uppercase letter, one number, and one special character")
+                "Password must contain at least one uppercase letter, one number, and one special character"),
+        turnstileToken: z.string().optional()
     }),
     params: z.object({}).optional().default({}),
     query: z.object({}).optional().default({}),
@@ -19,10 +20,27 @@ const loginSchema = z.object({
         email: z.string().email("Please provide a valid email address"),
         password: z.string()
             .min(6, "Password must be at least 6 characters long")
-            .max(100, "Password must be less than 100 characters")
+            .max(100, "Password must be less than 100 characters"),
+        turnstileToken: z.string().optional()
     }),
     params: z.object({}).optional().default({}),
     query: z.object({}).optional().default({}),
 });
 
-export { registerSchema, loginSchema };
+const googleAuthSchema = z.object({
+    body: z.object({
+        idToken: z.string().min(1, "Google ID token is required")
+    }),
+    params: z.object({}).optional().default({}),
+    query: z.object({}).optional().default({}),
+});
+
+const discordAuthSchema = z.object({
+    body: z.object({
+        code: z.string().min(1, "Discord access token is required")
+    }),
+    params: z.object({}).optional().default({}),
+    query: z.object({}).optional().default({}),
+});
+
+export { registerSchema, loginSchema, googleAuthSchema, discordAuthSchema };

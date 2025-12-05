@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { useNavigate } from "react-router-dom";
 import "../styles/popUp.css";
 
 /**
@@ -29,6 +30,7 @@ export default function Popup({
   onSnooze,
   allowedUserTypes = []
 }) {
+  const nav = useNavigate();
   if (!visible) return null;
 
   return (
@@ -91,7 +93,7 @@ export default function Popup({
                 // navigation handled by parent if desired
               }}
             >
-              Go to Profile
+              <span onClick={() => nav("/profile")}>Go to Profile</span>
             </button>
           </div>
         </form>
