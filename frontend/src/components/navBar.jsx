@@ -51,19 +51,18 @@ export default function NavBar() {
 				<Link to={token ? "/dashboard" : "/"} className="brand">
 					<span className="brand-mark">EK</span>
 					<span className="brand-name">ExpenseKeeper</span>
-				</Link>					{token && (
-						<>
-							<ThemeSwitcher />
-							<button
-								className={`mobile-toggle${isOpen ? " open" : ""}`}
-								aria-label={isOpen ? "Close menu" : "Open menu"}
-								aria-expanded={isOpen}
-								onClick={() => setIsOpen(v => !v)}
-							>
-								<span className="sr-only">{isOpen ? "Close menu" : "Open menu"}</span>
-								<Menu size={18} />
-							</button>
-						</>
+				</Link>
+					<ThemeSwitcher />
+					{token && (
+						<button
+							className={`mobile-toggle${isOpen ? " open" : ""}`}
+							aria-label={isOpen ? "Close menu" : "Open menu"}
+							aria-expanded={isOpen}
+							onClick={() => setIsOpen(v => !v)}
+						>
+							<span className="sr-only">{isOpen ? "Close menu" : "Open menu"}</span>
+							<Menu size={18} />
+						</button>
 					)}
 				</div>
 
