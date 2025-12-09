@@ -48,7 +48,7 @@ export default function NavBar() {
 			<div className="brand-row">
 				<Link to={token ? "/dashboard" : "/"} className="brand">
 					<span className="brand-mark">
-						<img src="/ExpenseKeeper_App_Icon.svg" alt="ExpenseKeeper" className="brand-logo" />
+						<img src="/expensekeeper-logo.svg" alt="ExpenseKeeper" className="brand-logo" />
 					</span>
 					<span className="brand-name">ExpenseKeeper</span>
 				</Link>
