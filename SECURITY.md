@@ -438,7 +438,4 @@ git secrets --scan
 ---
 
 **Last Updated**: December 9, 2025
-**Security Contact**: [Your Email or Security Team]
-
-**Last Updated**: December 5, 2025
 **Security Contact**: sumeetdutta040@gmail.com
