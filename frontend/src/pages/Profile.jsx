@@ -7,10 +7,11 @@ import api from "../lib/api";
 import "../styles/Profile.css"
 
 export default function Profile() {
-	const { user } = useAuth();
+	const { user, logout } = useAuth();
 	const [profile, setProfile] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [editing, setEditing] = useState(false);
+	const [deleting, setDeleting] = useState(false);
 	const [monthlyBudget, setMonthlyBudget] = useState("");
 	const [userType, setUserType] = useState("");
 
@@ -80,6 +81,30 @@ export default function Profile() {
 		}
 	}
 
+	async function deleteAccount(e) {
+		if (e) e.preventDefault();
+		if (deleting) return;
+		const confirmDelete = window.confirm(
+			"This will permanently delete your account and data. Are you sure?"
+		);
+		if (!confirmDelete) return;
+		setDeleting(true);
+		try {
+			const res = await api.delete("/api/user/profile/delete");
+			if (res.data.success) {
+				toast.success("Account deleted successfully.");
+				// Log out the user after deletion
+				logout();
+				window.location.href = "/login";
+			}
+		} catch (error) {
+			console.error("Delete account error:", error);
+			toast.error(error.response?.data?.message || "Failed to delete account");
+		} finally {
+			setDeleting(false);
+		}
+	}
+
 	if (loading && !profile) {
 		return (
 			<div className="loader-screen" role="status" aria-live="polite">
@@ -115,16 +140,6 @@ export default function Profile() {
 						<div className="profile-avatar">
 							<div className="avatar-placeholder">
 								<span className="profile-avatar-initial">{profile?.name?.charAt(0).toUpperCase() || 'U'}</span>
-							</div>
-						</div>
-						<div className="profile-info">
-							<h3 className="profile-name">{profile?.name || 'User'}</h3>
-							<p className="profile-email">
-								<Mail size={16} />
-								{profile?.email || ''}
-							</p>
-							<div className="profile-account-type">
-								{allowedUserTypes.find(t => t.value === profile?.userType)?.label || 'Standard'} Account
 							</div>
 						</div>
 					</div>
@@ -319,6 +334,28 @@ export default function Profile() {
 						</div>
 					</div>
 				</div>
+			</div>
+
+			{/* Danger Zone */}
+			<div className="danger-card">
+				<div>
+					<h3 className="danger-title">Danger Zone</h3>
+					<p className="danger-text">Permanently delete your account and all associated data.</p>
+				</div>
+				<button
+					onClick={deleteAccount}
+					disabled={deleting}
+					className="danger-button"
+				>
+					{deleting ? (
+						<>
+							<LoaderCircle size={18} className="spinner" />
+							Deleting...
+						</>
+					) : (
+						"Delete Account"
+					)}
+				</button>
 			</div>
 		</div>
 	);

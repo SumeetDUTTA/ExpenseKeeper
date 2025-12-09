@@ -78,4 +78,19 @@ async function updateProfile(req, res, next) {
     }
 }
 
-export { getProfile, updateProfile };
+async function deleteUser(req, res, next) {
+    try {
+        if (!req.user || !req.user._id) {
+            return next(new errorHandler(401, 'Unauthorized'));
+        }
+        const deletedUser = await User.findByIdAndDelete(req.user._id);
+        if (!deletedUser) {
+            return next(new errorHandler(404, 'User not found'));
+        }
+        return res.status(200).json({ success: true, message: 'User deleted successfully' });
+    } catch (error) {
+        return next(new errorHandler(500, 'Internal Server Error'));
+    }
+}
+
+export { getProfile, updateProfile, deleteUser };

@@ -381,6 +381,60 @@
 	margin-top: 6px;
 }
 
+/* Danger zone */
+.danger-card {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	background: linear-gradient(180deg, var(--panel), var(--bg-secondary));
+	border: 1px solid rgba(239, 68, 68, 0.18);
+	box-shadow: var(--shadow-sm);
+	border-radius: var(--card-radius);
+	padding: 14px;
+}
+
+.danger-title {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 800;
+	color: var(--danger, #ef4444);
+}
+
+.danger-text {
+	margin: 4px 0 0 0;
+	color: var(--muted);
+	font-size: 13px;
+}
+
+.danger-button {
+	background-color: var(--danger, #ef4444);
+	color: var(--text-primary);
+	border: 1px solid var(--danger, #ef4444);
+	padding: 10px 14px;
+	border-radius: 10px;
+	font-weight: 800;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+	min-width: 150px;
+}
+
+.danger-button:disabled {
+	opacity: 0.7;
+	cursor: not-allowed;
+}
+
+.spinner {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+}
+
 /* Small utilities */
 .muted {
 	color: var(--muted);
@@ -437,6 +491,35 @@
 
 	.profile-header-card .btn {
 		align-self: stretch;
+		justify-content: center;
+	}
+
+	.profile-main-card {
+		width: 100%;
+		justify-content: center;
+		align-items: center;
+
+	}
+
+	.avatar-placeholder {
+		align-self: center;
+		justify-self: center;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.profile-detail-item {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.danger-card {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.danger-button {
+		width: 100%;
 		justify-content: center;
 	}
 

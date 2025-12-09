@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="walletGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2B7FE0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E5BA8;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Bills stacked (light blue shades) -->
+  <g transform="translate(65, 35) rotate(-20)">
+    <rect x="0" y="0" width="70" height="45" rx="4" fill="#A8D4FF" opacity="0.7"/>
+  </g>
+  <g transform="translate(75, 30) rotate(-10)">
+    <rect x="0" y="0" width="70" height="45" rx="4" fill="#7AB8FF" opacity="0.85"/>
+  </g>
+  <g transform="translate(85, 28) rotate(0)">
+    <rect x="0" y="0" width="70" height="45" rx="4" fill="#4A9EFF"/>
+    <line x1="10" y1="12" x2="60" y2="12" stroke="#1E5BA8" stroke-width="1.5" opacity="0.5"/>
+    <line x1="10" y1="22" x2="60" y2="22" stroke="#1E5BA8" stroke-width="1" opacity="0.3"/>
+  </g>
+  
+  <!-- Wallet body -->
+  <rect x="30" y="65" width="140" height="90" rx="12" fill="url(#walletGradient)" filter="url(#shadow)"/>
+  
+  <!-- Wallet top flap curve -->
+  <path d="M 30 77 Q 30 65 42 65 L 158 65 Q 170 65 170 77" fill="url(#walletGradient)"/>
+  
+  <!-- Wallet texture/stitching -->
+  <circle cx="35" cy="72" r="1.5" fill="#FFFFFF" opacity="0.3"/>
+  <circle cx="165" cy="72" r="1.5" fill="#FFFFFF" opacity="0.3"/>
+  
+  <!-- Wallet clasp/buckle -->
+  <ellipse cx="160" cy="110" rx="18" ry="22" fill="#0D47A1"/>
+  <ellipse cx="160" cy="110" rx="14" ry="18" fill="#2B7FE0"/>
+  <circle cx="160" cy="110" r="6" fill="#0D47A1"/>
+  
+  <!-- Highlight on wallet -->
+  <ellipse cx="50" cy="75" rx="15" ry="8" fill="#FFFFFF" opacity="0.15"/>
+</svg>

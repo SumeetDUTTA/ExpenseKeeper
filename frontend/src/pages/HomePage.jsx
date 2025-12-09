@@ -5,7 +5,6 @@ import toast from 'react-hot-toast';
 import emailjs from '@emailjs/browser';
 
 import { useAuth } from '../contexts/authContext';
-import ThemeSwitcher from '../components/ThemeSwitcher';
 import '../styles/homePage.css';
 
 export default function HomePage() {
@@ -105,20 +104,6 @@ export default function HomePage() {
     <div className="home-page-container">
       {/* Hero Section */}
       <header className="hero">
-        <nav className="navbar">
-          <div className="logo">
-            <span className="logo-icon">EK</span>
-            <span className="logo-text">ExpenseKeeper</span>
-          </div>
-          <div className="nav-links">
-            <a href="#features" className="nav-link">Features</a>
-            <a href="#how-it-works" className="nav-link">How It Works</a>
-            <a href="#contact" className="nav-link">Contact</a>
-            <ThemeSwitcher />
-            <Link to="/login" className="btn btn-primary">Login</Link>
-          </div>
-        </nav>
-        
         <div className="hero-content">
           <h1 className="hero-title">Take Control of Your Finances with AI-Powered Insights</h1>
           <p className="hero-subtitle">Track expenses, analyze spending patterns, and predict future expenses with machine learning</p>
