@@ -2,7 +2,7 @@ import express from 'express';
 
 import { getProfile, updateProfile, deleteUser } from '../controllers/userControllers.js';
 import { updateUserMeta } from '../controllers/userMetaController.js';
-import { updateUserMetaSchema } from '../validators/userValidator.js';
+import { updateUserMetaSchema, updateUserSchema } from '../validators/userValidator.js';
 import { validate } from '../middleware/validate.js';
 import auth from '../middleware/auth.js';
 
@@ -10,7 +10,7 @@ import auth from '../middleware/auth.js';
 const router = express.Router();
 
 router.get('/profile', auth, getProfile);
-router.patch('/profile', auth, updateProfile);
+router.patch('/profile', auth, validate(updateUserSchema), updateProfile);
 router.delete('/profile/delete', auth, deleteUser);
 router.patch('/meta', auth, validate(updateUserMetaSchema), updateUserMeta);
 

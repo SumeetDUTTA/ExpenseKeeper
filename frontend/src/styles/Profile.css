@@ -194,6 +194,18 @@
 	font-size: 15px;
 }
 
+.icon-action {
+	position: absolute;
+	right: 10px;
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: var(--text-secondary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
 /* Budget settings card */
 .budget-settings-card {
 	background: var(--panel);
@@ -258,6 +270,42 @@
 .monthly-budget-input:focus {
 	box-shadow: 0 6px 18px rgba(99, 102, 241, 0.08);
 	border-color: rgba(99, 102, 241, 0.2);
+}
+
+/* Password input wrapper for Eye/EyeOff icons */
+.password-input-wrapper {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+
+.password-input-wrapper .monthly-budget-input {
+	padding-right: 45px;
+	width: 100%;
+}
+
+.password-toggle-btn {
+	position: absolute;
+	right: 12px;
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: var(--text-secondary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 4px;
+	border-radius: 6px;
+	transition: all 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+	background: var(--bg-secondary);
+	color: var(--accent);
+}
+
+.password-toggle-btn:active {
+	transform: scale(0.95);
 }
 
 .user-type-select {

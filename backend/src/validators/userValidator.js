@@ -1,5 +1,28 @@
 import { z } from 'zod';
 
+export const updateUserSchema = z.object({
+    body: z.object({
+        name: z.string().min(1, 'Name must be a non-empty string').optional(),
+        email: z.string().email({ message: 'Invalid email format' }).optional(),
+        currentPassword: z.string().optional(),
+        password: z.string()
+            .min(6, 'New password must be at least 6 characters')
+            .max(100, 'New password must be less than 100 characters')
+            .regex(/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/,
+                "Password must contain at least one uppercase letter, one number, and one special character")
+            .optional(),
+        monthlyBudget: z.number().min(0, 'Monthly budget must be a positive number').optional(),
+        userType: z.enum([
+            'college_student',
+            'young_professional',
+            'family_moderate',
+            'family_high',
+            'luxury_lifestyle',
+            'senior_retired'
+        ]).optional()
+    })
+})
+
 // Validation schema for updating user metadata
 export const updateUserMetaSchema = z.object({
     body: z.object({

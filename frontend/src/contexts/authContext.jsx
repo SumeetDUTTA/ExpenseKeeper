@@ -35,38 +35,45 @@ function AuthProvider({ children }) {
     async function login(credentials) {
         try {
             const res = await api.post("/api/auth/login", credentials);
-            if (res.data && res.data.token) {
+            if (res.data && res.data.token && res.data.user) {
                 setToken(res.data.token);
                 setUser(res.data.user);
+                toast.success("Logged in successfully!");
             } else {
-                toast.error('Login failed: Invalid response from server.');
+                toast.error("Login failed: Invalid response from server.");
             }
             return res;
         } catch (error) {
             if (error.response) {
-                toast.error(`Login failed: ${error.response.data?.message ?? error.message}`);
+                const errorMessage = error.response.data?.message || error.message;
+                toast.error(`Login failed: ${errorMessage}`);
             } else {
                 toast.error(`Login failed: ${error.message}`);
             }
+            throw error;
         }
     }
 
     async function register(payload) {
         try {
             const res = await api.post("/api/auth/register", payload);
-            if (res.data && res.data.token) {
+            if (res.data && res.data.token && res.data.user) {
                 setToken(res.data.token);
                 setUser(res.data.user);
+                toast.success("Account created successfully!");
+            } else {
+                toast.error("Registration failed: Invalid response from server.");
             }
             return res;
         } catch (error) {
             if (error.response) {
-                toast.error(`Register failed: ${error.response.data?.message ?? error.message}`);
+                const errorMessage = error.response.data?.message || error.message;
+                toast.error(`Registration failed: ${errorMessage}`);
             } else {
-                toast.error(`Register failed: ${error.message}`);
+                toast.error(`Registration failed: ${error.message}`);
             }
+            throw error;
         }
-
     }
 
     async function loginWithGoogle(idToken) {
@@ -105,6 +112,21 @@ function AuthProvider({ children }) {
         }
     }
 
+    async function updateProfile(updates) {
+        try {
+            const res = await api.patch("/api/user/profile", updates);
+            if (res.data?.user) {
+                setUser(res.data.user);
+                toast.success("Profile updated successfully!");
+            }
+            return res;
+        } catch (error) {
+            const msg = error.response?.data?.message || error.message;
+            toast.error(`Profile update failed: ${msg}`);
+            throw error;
+        }
+    }
+
     function logout() {
         setToken(null);
         setUser(null);
@@ -112,7 +134,9 @@ function AuthProvider({ children }) {
         localStorage.removeItem("user");
     }
     return (
-        <AuthContext.Provider value={{ token, user, login, register, loginWithGoogle, loginWithDiscord, logout, setToken, setUser }}>
+        <AuthContext.Provider value={{
+            token, user, login, register, updateProfile, loginWithGoogle, loginWithDiscord, logout, setToken, setUser
+        }}>
             {children}
         </AuthContext.Provider>
     )

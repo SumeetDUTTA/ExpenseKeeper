@@ -59,7 +59,9 @@ export default function Predict() {
 
 				if (response.ok) {
 					setMlServerAwake(true);
+					toast.success('ML server is ready! You can now generate predictions.');
 				} else {
+					toast.error('ML server not responding. Please try again later.');
 					throw new Error('ML server not responding');
 				}
 			} catch (err) {

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { User, Mail, Wallet, Settings, Save, LoaderCircle } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { User, Mail, Wallet, Settings, Save, LoaderCircle, Check, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { useAuth } from "../contexts/authContext";
@@ -7,11 +7,21 @@ import api from "../lib/api";
 import "../styles/Profile.css"
 
 export default function Profile() {
-	const { user, logout } = useAuth();
+	const { user, logout, updateProfile } = useAuth();
 	const [profile, setProfile] = useState(null);
 	const [loading, setLoading] = useState(false);
 	const [editing, setEditing] = useState(false);
 	const [deleting, setDeleting] = useState(false);
+	const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+	const [showNewPassword, setShowNewPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const [editingBasicInfo, setEditingBasicInfo] = useState(false);
+	const [editingPassword, setEditingPassword] = useState(false);
+	const [name, setName] = useState(user?.name || "");
+	const [email, setEmail] = useState(user?.email || "");
+	const [currentPassword, setCurrentPassword] = useState("");
+	const [newPassword, setNewPassword] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
 	const [monthlyBudget, setMonthlyBudget] = useState("");
 	const [userType, setUserType] = useState("");
 
@@ -24,6 +34,17 @@ export default function Profile() {
 		{ value: 'senior_retired', label: 'Senior/Retired' }
 	];
 
+	// Password validation checks
+	const passwordValidations = useMemo(() => {
+		const BACKEND_PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
+		const hasMinLen = newPassword.length >= 6;
+		const hasUpper = /[A-Z]/.test(newPassword);
+		const hasDigit = /\d/.test(newPassword);
+		const hasSpecial = /[@$!%*?&]/.test(newPassword);
+		const matchesBackend = BACKEND_PASSWORD_REGEX.test(newPassword);
+		return { hasMinLen, hasUpper, hasDigit, hasSpecial, matchesBackend };
+	}, [newPassword]);
+
 	async function fetchProfile() {
 		setLoading(true);
 		try {
@@ -32,6 +53,8 @@ export default function Profile() {
 			setProfile(userData);
 			setMonthlyBudget(userData.monthlyBudget || "");
 			setUserType(userData.userType || "");
+			setName(userData.name || "");
+			setEmail(userData.email || "");
 		} catch (error) {
 			console.error("Fetch profile error:", error);
 			toast.error(error.response?.data?.message || "Failed to fetch profile");
@@ -46,6 +69,57 @@ export default function Profile() {
 			fetchProfile();
 		}
 	}, [user]);
+
+	async function updateBasicInfo(e) {
+		e.preventDefault();
+		const updates = {};
+		if (name && name !== profile?.name) updates.name = name;
+		if (email && email !== profile?.email) updates.email = email;
+
+		if (!Object.keys(updates).length) {
+			toast.error("No changes to update");
+			return;
+		}
+		try {
+			await updateProfile(updates);
+			await fetchProfile();
+			setEditingBasicInfo(false);
+		} catch (error) {
+			console.error("Basic info update error:", error);
+		}
+	}
+
+	async function handlePasswordUpdate(e) {
+		e.preventDefault();
+
+		if (!currentPassword || !newPassword || !confirmPassword) {
+			toast.error("Please fill in all password fields");
+			return;
+		}
+
+		if (newPassword !== confirmPassword) {
+			toast.error("New passwords do not match");
+			return;
+		}
+
+		if (!passwordValidations.matchesBackend) {
+			toast.error("Password does not meet requirements. See the checklist.");
+			return;
+		}
+
+		try {
+			await updateProfile({
+				currentPassword,
+				password: newPassword
+			});
+			setCurrentPassword("");
+			setNewPassword("");
+			setConfirmPassword("");
+			setEditingPassword(false);
+		} catch (error) {
+			console.error("Password update error:", error);
+		}
+	}
 
 	async function updateBudget(e) {
 		e.preventDefault();
@@ -65,19 +139,12 @@ export default function Profile() {
 				return;
 			}
 
-			const res = await api.patch("/api/user/meta", payload);
-
-			if (res.data.success && res.data.user) {
-				toast.success("Profile updated successfully!");
-				// Update profile with the returned user data
-				setProfile(res.data.user);
-				setMonthlyBudget(res.data.user.monthlyBudget || "");
-				setUserType(res.data.user.userType || "");
-				setEditing(false);
-			}
+			await updateProfile(payload);
+			// Refresh profile data
+			await fetchProfile();
+			setEditing(false);
 		} catch (error) {
 			console.error("Update error:", error);
-			toast.error(error.response?.data?.message || "Failed to update profile");
 		}
 	}
 
@@ -92,10 +159,12 @@ export default function Profile() {
 		try {
 			const res = await api.delete("/api/user/profile/delete");
 			if (res.data.success) {
-				toast.success("Account deleted successfully.");
 				// Log out the user after deletion
 				logout();
 				window.location.href = "/login";
+				if (location.pathname === "/login") {
+					toast.success("Account deleted successfully.");
+				}
 			}
 		} catch (error) {
 			console.error("Delete account error:", error);
@@ -122,14 +191,6 @@ export default function Profile() {
 				<div>
 					<h2 className="profile-header-title">Profile</h2>
 					<p className="profile-header-subtitle">Manage your account and preferences</p>
-				</div>
-
-				<div style={{ marginLeft: 'auto' }}>
-					<button onClick={() => setEditing(!editing)}
-						className={`btn ${editing ? 'btn-ghost' : ''}`}>
-						<Settings size={20} />
-						{editing ? 'Cancel' : 'Edit Settings'}
-					</button>
 				</div>
 			</div>
 
@@ -182,6 +243,240 @@ export default function Profile() {
 				</div>
 			</div>
 
+			{/* Basic Information Edit Card */}
+			<div className="budget-settings-card">
+				<div className="card-body">
+					<h3 className="budget-settings-title">
+						<User size={28} className="user-icon" />
+						Basic Information
+					</h3>
+					<p className="budget-settings-subtitle">
+						Update your name and email address
+					</p>
+
+					{editingBasicInfo ? (
+						<form onSubmit={updateBasicInfo} className="budget-form">
+							<div className="monthly-budget-field">
+								<label className="monthly-budget-label">
+									Full Name
+								</label>
+								<input
+									type="text"
+									placeholder="Enter your full name"
+									value={name}
+									onChange={(e) => setName(e.target.value)}
+									className="monthly-budget-input"
+									required
+								/>
+							</div>
+
+							<div className="monthly-budget-field">
+								<label className="monthly-budget-label">
+									Email Address
+								</label>
+								<input
+									type="email"
+									placeholder="Enter your email"
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									className="monthly-budget-input"
+									required
+								/>
+							</div>
+
+							<div className="budget-form-actions">
+								<button type="submit" className="budget-form-submit">
+									<Save size={20} />
+									Save Changes
+								</button>
+								<button
+									type="button"
+									onClick={() => {
+										setEditingBasicInfo(false);
+										setName(profile?.name || "");
+										setEmail(profile?.email || "");
+									}}
+									className="budget-form-cancel"
+								>
+									Cancel
+								</button>
+							</div>
+						</form>
+					) : (
+						<div className="budget-display-grid">
+							<div className="budget-display-card">
+								<div className="budget-display-content">
+									<div>
+										<p className="budget-display-label">Name</p>
+										<h3 className="budget-display-value" style={{ fontSize: '18px' }}>
+											{profile?.name || 'Not Set'}
+										</h3>
+									</div>
+								</div>
+							</div>
+							<div className="budget-display-card">
+								<div className="budget-display-content">
+									<div>
+										<p className="budget-display-label">Email</p>
+										<h3 className="budget-display-value" style={{ fontSize: '16px', wordBreak: 'break-word' }}>
+											{profile?.email || 'Not Set'}
+										</h3>
+									</div>
+								</div>
+							</div>
+							<button
+								onClick={() => setEditingBasicInfo(true)}
+								className="budget-form-submit"
+								style={{ gridColumn: '1 / -1', marginTop: '12px' }}
+							>
+								<Settings size={20} />
+								Edit Information
+							</button>
+						</div>
+					)}
+				</div>
+			</div>
+
+			{/* Password Update Card - Only for local auth users */}
+			{profile?.authProvider === 'local' && (
+				<div className="budget-settings-card">
+					<div className="card-body">
+						<h3 className="budget-settings-title">
+							<Settings size={28} className="user-icon" />
+							Change Password
+						</h3>
+						<p className="budget-settings-subtitle">
+							Update your account password for better security
+						</p>
+
+						{editingPassword ? (
+							<form onSubmit={handlePasswordUpdate} className="budget-form">
+								<div className="monthly-budget-field">
+									<label className="monthly-budget-label">
+										Current Password
+									</label>
+									<div className="password-input-wrapper">
+										<input
+											type={showCurrentPassword ? "text" : "password"}
+											placeholder="Enter current password"
+											value={currentPassword}
+											onChange={(e) => setCurrentPassword(e.target.value)}
+											className="monthly-budget-input"
+											required
+										/>
+										<button
+											type="button"
+											className="password-toggle-btn"
+											onClick={() => setShowCurrentPassword((v) => !v)}
+											aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+										>
+											{showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+										</button>
+									</div>
+								</div>					<div className="monthly-budget-field">
+									<label className="monthly-budget-label">
+										New Password
+									</label>
+									<div className="password-input-wrapper">
+										<input
+											type={showNewPassword ? "text" : "password"}
+											placeholder="Enter new password (min 6 characters)"
+											value={newPassword}
+											onChange={(e) => setNewPassword(e.target.value)}
+											className="monthly-budget-input"
+											required
+											minLength={6}
+										/>
+										<button
+											type="button"
+											className="password-toggle-btn"
+											onClick={() => setShowNewPassword((v) => !v)}
+											aria-label={showNewPassword ? "Hide password" : "Show password"}
+										>
+											{showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+										</button>
+									</div>									{/* Password requirements checklist */}
+									<div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
+										<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+											<input
+												type="checkbox"
+												checked={passwordValidations.matchesBackend}
+												readOnly
+												disabled
+												aria-label="Password meets backend standards"
+											/>
+											<span style={{ fontSize: 13 }}>
+												Password meets backend standards
+											</span>
+										</div>
+
+										{/* Detailed small checklist */}
+										<div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+											<SmallChecklistItem ok={passwordValidations.hasMinLen} text="Min 6 characters" />
+											<SmallChecklistItem ok={passwordValidations.hasUpper} text="Uppercase letter (A-Z)" />
+											<SmallChecklistItem ok={passwordValidations.hasDigit} text="Number (0-9)" />
+											<SmallChecklistItem ok={passwordValidations.hasSpecial} text="Special char (@$!%*?&)" />
+										</div>
+									</div>
+								</div>
+
+								<div className="monthly-budget-field">
+									<label className="monthly-budget-label">
+										Confirm New Password
+									</label>
+									<div className="password-input-wrapper">
+										<input
+											type={showConfirmPassword ? "text" : "password"}
+											placeholder="Confirm new password"
+											value={confirmPassword}
+											onChange={(e) => setConfirmPassword(e.target.value)}
+											className="monthly-budget-input"
+											required
+											minLength={6}
+										/>
+										<button
+											type="button"
+											className="password-toggle-btn"
+											onClick={() => setShowConfirmPassword((v) => !v)}
+											aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+										>
+											{showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+										</button>
+									</div>
+								</div>
+								<div className="budget-form-actions">
+									<button type="submit" className="budget-form-submit">
+										<Save size={20} />
+										Update Password
+									</button>
+									<button
+										type="button"
+										onClick={() => {
+											setEditingPassword(false);
+											setCurrentPassword("");
+											setNewPassword("");
+											setConfirmPassword("");
+										}}
+										className="budget-form-cancel"
+									>
+										Cancel
+									</button>
+								</div>
+							</form>
+						) : (
+							<button
+								onClick={() => setEditingPassword(true)}
+								className="budget-form-submit"
+								style={{ marginTop: '12px' }}
+							>
+								<Settings size={20} />
+								Change Password
+							</button>
+						)}
+					</div>
+				</div>
+			)}
+
 			{/* Budget Settings */}
 			<div className="budget-settings-card">
 				<div className="card-body">
@@ -192,6 +487,9 @@ export default function Profile() {
 					<p className="budget-settings-subtitle">
 						Set your monthly spending limit and account type to personalize your experience
 					</p>
+
+					<div style={{ marginLeft: 'auto' }}>
+					</div>
 
 					{editing ? (
 						<form onSubmit={updateBudget} className="budget-form">
@@ -286,6 +584,13 @@ export default function Profile() {
 									<div className="budget-display-helptext">Your spending profile category</div>
 								</div>
 							</div>
+							<button onClick={() => setEditing(!editing)}
+								className="budget-form-submit"
+								style={{ gridColumn: '1 / -1', marginTop: '12px' }}
+							>
+								<Settings size={20} />
+								{editing ? 'Cancel' : 'Edit Settings'}
+							</button>
 						</div>
 					)}
 				</div>
@@ -357,6 +662,27 @@ export default function Profile() {
 					)}
 				</button>
 			</div>
+		</div>
+	);
+}
+
+/* Small helper component for checklist UI */
+function SmallChecklistItem({ ok, text }) {
+	return (
+		<div style={{
+			display: 'inline-flex',
+			alignItems: 'center',
+			gap: 6,
+			fontSize: 13,
+			color: ok ? 'var(--text-primary)' : 'var(--text-muted)',
+			padding: '6px 8px',
+			borderRadius: 8,
+			border: `1px solid ${ok ? 'transparent' : 'var(--border-color)'}`,
+			background: ok ? 'rgba(34,197,94,0.06)' : 'transparent',
+			minWidth: 140
+		}}>
+			{ok ? <Check size={14} /> : <span style={{ width: 14, height: 14 }} />}
+			<span>{text}</span>
 		</div>
 	);
 }
