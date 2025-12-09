@@ -9,7 +9,9 @@ The ExpenseKeeper backend is a robust Node.js/Express API that handles all serve
 ## ✨ Features
 
 -   **JWT Authentication:** Secure token-based authentication with bcrypt password hashing and 7-day token expiry
--   **User Management:** Registration, login, profile retrieval, budget configuration, and account statistics
+-   **OAuth 2.0 Integration:** Google and Discord OAuth authentication with automatic account creation and linking
+-   **CAPTCHA Verification:** Cloudflare Turnstile CAPTCHA validation on login/signup endpoints to prevent bot attacks
+-   **User Management:** Registration, login, profile retrieval, name/email/password updates, budget configuration, and account deletion
 -   **Expense CRUD:** Full expense lifecycle with search, filtering, pagination, and category-based analytics
 -   **Data Aggregation:** Monthly summaries, category-wise totals, spending trends, and budget tracking
 -   **ML Integration:** Proxy endpoints to Python ML API for expense predictions with error handling
@@ -26,8 +28,9 @@ The ExpenseKeeper backend is a robust Node.js/Express API that handles all serve
 -   **Runtime:** Node.js (ES Modules)
 -   **Framework:** Express.js 5.x
 -   **Database:** MongoDB with Mongoose 8.x ODM
--   **Authentication:** JWT (jsonwebtoken) with bcryptjs for password hashing
+-   **Authentication:** JWT (jsonwebtoken) with bcryptjs for password hashing, OAuth 2.0 (Google, Discord)
 -   **Validation:** Zod 4.x for schema-based request validation
+-   **Security:** Cloudflare Turnstile CAPTCHA verification
 -   **Caching/Rate Limiting:** Redis with @upstash/redis and rate-limit-redis
 -   **Security:** Helmet.js for security headers, express-rate-limit
 -   **HTTP Client:** Axios for ML API communication
@@ -118,6 +121,16 @@ MONGODB_URI=mongodb://localhost:27017/expense-tracker
 JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 JWT_EXPIRE=7d
 
+# OAuth 2.0
+GOOGLE_CLIENT_ID=your_google_oauth_client_id
+GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
+DISCORD_CLIENT_ID=your_discord_oauth_client_id
+DISCORD_CLIENT_SECRET=your_discord_oauth_client_secret
+DISCORD_REDIRECT_URI=http://localhost:5000/api/auth/discord/callback
+
+# Cloudflare Turnstile
+TURNSTILE_SECRET_KEY=your_cloudflare_turnstile_secret_key
+
 # Redis (Upstash)
 UPSTASH_REDIS_REST_URL=https://your-upstash-redis.upstash.io
 UPSTASH_REDIS_REST_TOKEN=your_upstash_token
@@ -151,19 +164,36 @@ The API server will be available at `http://localhost:5000`.
 ## 🔐 Authentication Flow
 
 1.  **Registration** (`POST /api/auth/register`):
-    -   User submits name, email, password, monthlyBudget
+    -   User submits name, email, password, Turnstile CAPTCHA token
+    -   Backend verifies Turnstile token with Cloudflare API
     -   Password hashed with bcrypt (10 salt rounds)
-    -   User document created in MongoDB
+    -   User document created in MongoDB with authProvider='local'
     -   JWT token generated and returned with user info
     -   User automatically logged in after registration
 
 2.  **Login** (`POST /api/auth/login`):
-    -   User submits email and password
+    -   User submits email, password, Turnstile CAPTCHA token
+    -   Backend verifies Turnstile token with Cloudflare API
     -   Password verified with bcrypt.compare()
     -   JWT token generated with 7-day expiry
     -   Returns token and user info
 
-3.  **Protected Routes**:
+3.  **Google OAuth** (`POST /api/auth/google`):
+    -   User authenticates with Google Sign-In
+    -   Frontend sends Google ID token to backend
+    -   Backend verifies token with Google OAuth2 client
+    -   Creates user if not exists, or links to existing email
+    -   JWT token generated and returned
+
+4.  **Discord OAuth** (`GET /api/auth/discord/callback`):
+    -   User redirected to Discord authorization page
+    -   Discord redirects back with authorization code
+    -   Backend exchanges code for access token
+    -   Fetches user info from Discord API
+    -   Creates user if not exists, or links to existing email
+    -   JWT token generated and user redirected to frontend
+
+5.  **Protected Routes**:
     -   Client sends `Authorization: Bearer <token>` header
     -   Auth middleware verifies token with JWT_SECRET
     -   Decoded user info attached to `req.user`
@@ -175,15 +205,19 @@ The API server will be available at `http://localhost:5000`.
 
 | Method | Endpoint   | Description          | Auth Required |
 |--------|------------|----------------------|---------------|
-| POST   | `/register` | Create new user account | No |
-| POST   | `/login`    | Login and get JWT token | No |
+| POST   | `/register` | Create new user account with Turnstile CAPTCHA | No |
+| POST   | `/login`    | Login and get JWT token with Turnstile CAPTCHA | No |
+| POST   | `/google`   | Google OAuth authentication | No |
+| GET    | `/discord/callback` | Discord OAuth callback handler | No |
+| GET    | `/health`   | Backend health check endpoint | No |
 
 ### User Routes (`/api/users`)
 
 | Method | Endpoint   | Description                         | Auth Required |
 |--------|------------|-------------------------------------|---------------|
 | GET    | `/profile` | Get current user profile            | Yes |
-| PATCH  | `/profile` | Update user profile                 | Yes |
+| PATCH  | `/profile` | Update user profile (name, email, password, budget, userType) | Yes |
+| DELETE | `/profile/delete` | Delete user account permanently | Yes |
 | PATCH  | `/meta`    | Update user metadata (budget, type) | Yes |
 
 ### Expense Routes (`/api/expenses`)
@@ -239,7 +273,10 @@ Returns category-wise expense predictions for the specified time horizon based o
 {
   name: String (required, trimmed),
   email: String (required, unique, lowercase),
-  password: String (required, hashed, minlength: 6),
+  password: String (hashed, minlength: 6, select: false),
+  authProvider: String (enum: ['local', 'google', 'discord'], default: 'local', required),
+  googleId: String (unique, sparse),
+  discordId: String (unique, sparse),
   monthlyBudget: Number (default: 0),
   userType: String (enum: ['college_student', 'young_professional', 'family_moderate', 
                            'family_high', 'luxury_lifestyle', 'senior_retired'], 

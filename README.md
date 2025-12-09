@@ -30,10 +30,11 @@ ExpenseKeeper combines traditional expense management with predictive analytics 
 
 ## Technologies Used
 
-- **Frontend:** React (Vite), React Router, Recharts, Lucide Icons, React Hot Toast, TailwindCSS, DaisyUI
-- **Backend:** Node.js, Express.js 5.x, JWT authentication, Zod 4.x validation, bcrypt
+- **Frontend:** React (Vite), React Router, Recharts, Lucide Icons, React Hot Toast, TailwindCSS, DaisyUI, @marsidev/react-turnstile
+- **Backend:** Node.js, Express.js 5.x, JWT authentication, OAuth 2.0 (Google, Discord), Zod 4.x validation, bcrypt
 - **Database:** MongoDB with Mongoose 8.x ODM
 - **Rate Limiting:** Redis (Upstash) - 50 req/min general, 5 req/min auth
+- **Security:** Cloudflare Turnstile CAPTCHA verification
 - **Machine Learning:** Python, XGBoost, FastAPI, Optuna (hyperparameter tuning), scikit-learn, pandas, numpy
 - **Development:** Nodemon (backend), Vite dev server (frontend), Uvicorn (ML API)
 
@@ -158,10 +159,15 @@ The application will be available at:
 - **Marketing Home Page:** Dedicated landing page for new visitors explaining features, workflow, and technology stack
 - **Auto-redirect:** Authenticated users automatically redirected to dashboard
 - **Secure Authentication:** JWT-based signup/login with bcrypt password hashing
+- **OAuth Integration:** Google and Discord OAuth authentication for seamless login
+- **CAPTCHA Protection:** Cloudflare Turnstile CAPTCHA on login/signup to prevent bot attacks
 - **Server Health Checks:** Automatic health checks for backend and ML server with user-friendly wait notifications (30s backend, 45s ML server) to handle Render's auto-sleep behavior
 
 ### User Management
 - **User Profiles:** Customizable profiles with monthly budget settings and user type selection (college student, young professional, family moderate/high, luxury lifestyle, senior retired)
+- **Profile Updates:** Edit name, email, and password with real-time validation and password strength checklist
+- **Password Security:** Password change requires current password verification with visual strength indicators (uppercase, digit, special character)
+- **OAuth Account Handling:** Password changes disabled for Google/Discord OAuth accounts with clear user feedback
 - **Theme Support:** Light and dark mode with persistent preferences
 
 ### Expense Management
@@ -219,15 +225,18 @@ See `mlModel/README.md` for detailed ML documentation.
 ## API Endpoints
 
 ### Backend (Express)
-- `POST /api/auth/signup` - User registration
-- `POST /api/auth/login` - User login
+- `POST /api/auth/signup` - User registration with Turnstile CAPTCHA verification
+- `POST /api/auth/login` - User login with Turnstile CAPTCHA verification
+- `POST /api/auth/google` - Google OAuth authentication
+- `GET /api/auth/discord/callback` - Discord OAuth callback handler
 - `GET /api/auth/health` - Backend health check endpoint
 - `GET /api/expenses` - Get all user expenses (with optional filters)
 - `POST /api/expenses` - Create new expense
 - `PATCH /api/expenses/:id` - Update expense
 - `DELETE /api/expenses/:id` - Delete expense
 - `GET /api/user/profile` - Get user profile
-- `PATCH /api/user/profile` - Update user profile
+- `PATCH /api/user/profile` - Update user profile (name, email, password, budget, userType)
+- `DELETE /api/user/profile/delete` - Delete user account
 - `PATCH /api/user/meta` - Update user metadata (budget, user type)
 - `POST /api/predict` - ML prediction proxy with Redis caching (production only)
 
@@ -255,12 +264,22 @@ ML_API_URL=http://127.0.0.1:8000
 UPSTASH_REDIS_REST_URL=your_redis_url
 UPSTASH_REDIS_REST_TOKEN=your_redis_token
 CORS_ORIGIN=http://localhost:5173
+GOOGLE_CLIENT_ID=your_google_oauth_client_id
+GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
+DISCORD_CLIENT_ID=your_discord_oauth_client_id
+DISCORD_CLIENT_SECRET=your_discord_oauth_client_secret
+DISCORD_REDIRECT_URI=http://localhost:5000/api/auth/discord/callback
+TURNSTILE_SECRET_KEY=your_cloudflare_turnstile_secret_key
 ```
 
 **Frontend (.env):**
 ```env
 VITE_API_TARGET=http://localhost:5000      # Backend API URL
 VITE_ML_API_URL=http://127.0.0.1:8000      # ML API URL (optional, falls back to localhost:8000)
+VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
+VITE_DISCORD_CLIENT_ID=your_discord_oauth_client_id
+VITE_DISCORD_REDIRECT_URI=http://localhost:5173/discord/callback
+VITE_TURNSTILE_SITE_KEY=your_cloudflare_turnstile_site_key
 ```
 
 **ML Model:**

@@ -4,15 +4,20 @@
 
 ### 1. **Authentication & Authorization**
 - ✅ JWT tokens for authentication
-- ✅ Password hashing (bcrypt)
+- ✅ Password hashing (bcrypt with 10 salt rounds)
 - ✅ Token expiration (7 days)
 - ✅ Protected routes with auth middleware
-- ✅ OAuth 2.0 (Google, Discord)
+- ✅ OAuth 2.0 (Google Sign-In, Discord OAuth)
+- ✅ Password change requires current password verification
+- ✅ OAuth accounts protected from password changes
 
 ### 2. **Input Validation**
-- ✅ Zod schema validation on all inputs
+- ✅ Zod schema validation on all inputs (auth, expenses, user updates, predictions)
 - ✅ Request body size limits (1MB)
 - ✅ Type checking and sanitization
+- ✅ Password strength validation (min 6 chars, uppercase, digit, special character)
+- ✅ Email format validation
+- ✅ User type enum validation
 
 ### 3. **Rate Limiting**
 - ✅ General API: 50 requests/minute per IP
@@ -20,8 +25,10 @@
 - ✅ Redis-backed rate limiting for distributed systems
 
 ### 4. **Bot Protection**
-- ✅ Cloudflare Turnstile CAPTCHA on login/signup
-- ✅ Server-side Turnstile verification
+- ✅ Cloudflare Turnstile CAPTCHA on login/signup pages
+- ✅ Server-side Turnstile token verification with Cloudflare API
+- ✅ CAPTCHA tokens single-use and time-limited
+- ✅ Frontend-side CAPTCHA validation with user feedback
 
 ### 5. **HTTP Security Headers**
 - ✅ Helmet.js enabled
@@ -57,14 +64,24 @@
 - [ ] Use environment variables for DB credentials
 - [ ] Enable MongoDB authentication
 - [ ] Use connection string encryption
-- [ ] Regular backups
-
 ### Password Security
-- ✅ Min 6 characters (recommend 8+)
-- ✅ Require uppercase letter
-- ✅ Require number
-- ✅ Require special character
-- ✅ Passwords hashed with bcrypt
+- ✅ Min 6 characters (enforced on frontend and backend)
+- ✅ Require uppercase letter (A-Z)
+- ✅ Require number (0-9)
+- ✅ Require special character (@$!%*?&)
+- ✅ Passwords hashed with bcrypt (10 salt rounds)
+- ✅ Real-time password strength validation on frontend
+- ✅ Visual password strength checklist for user feedback
+- ✅ Password visibility toggle (Eye/EyeOff icons)
+### API Security
+- ✅ Rate limiting enabled (50 req/min general, 5 req/min auth)
+- ✅ Input validation on all endpoints with detailed error messages
+- ✅ Authentication required for protected routes
+- ✅ JWT tokens expire after 7 days
+- ✅ User profile updates validate ownership
+- ✅ Account deletion requires authentication
+- ✅ Expense operations restricted to owner
+- ✅ OAuth provider validation on account linking
 
 ### API Security
 - ✅ Rate limiting enabled
@@ -141,14 +158,17 @@ npm install csurf
 ```
 
 #### 6. **Implement Refresh Tokens**
-- Use short-lived access tokens (15-30 min)
-- Use long-lived refresh tokens (7 days)
-- Store refresh tokens securely
-
 ### Medium Priority
 
 #### 7. **Add Account Security Features**
-- Email verification on signup
+- ✅ Password change with current password verification
+- ✅ Account deletion with confirmation
+- ✅ OAuth account protection (no password changes)
+- Email verification on signup (TODO)
+- Password reset via email (TODO)
+- Two-factor authentication (2FA) (TODO)
+- Login notification emails (TODO)
+- Session management (view active sessions) (TODO)
 - Password reset via email
 - Two-factor authentication (2FA)
 - Login notification emails
@@ -215,16 +235,19 @@ npm audit fix
 - Verify HTTPS certificate
 
 ---
-
-## 🎯 Common Attack Vectors & Protections
-
 | Attack Type | Protection | Status |
 |-------------|------------|--------|
-| SQL/NoSQL Injection | Input validation, sanitization | ✅ Zod validation |
+| SQL/NoSQL Injection | Input validation, sanitization | ✅ Zod validation + Mongoose |
 | XSS (Cross-Site Scripting) | Input sanitization, CSP headers | ⚠️ Need xss-clean |
 | CSRF (Cross-Site Request Forgery) | CSRF tokens, SameSite cookies | ✅ CORS restricted |
-| Brute Force | Rate limiting, CAPTCHA | ✅ Implemented |
-| DDoS | Rate limiting, CDN, WAF | ✅ Rate limiting |
+| Brute Force | Rate limiting, CAPTCHA | ✅ Turnstile + Rate limiting |
+| DDoS | Rate limiting, CDN, WAF | ✅ Redis rate limiting |
+| Man-in-the-Middle | HTTPS, HSTS | ⚠️ Enable in prod |
+| Session Hijacking | Secure cookies, token expiry | ✅ JWT expiry (7d) |
+| Credential Stuffing | Rate limiting, CAPTCHA, 2FA | ✅ Turnstile CAPTCHA |
+| Password Cracking | Strong password policy, bcrypt | ✅ Regex validation + bcrypt |
+| OAuth Token Theft | Secure token handling, HTTPS | ✅ Backend verification |
+| Account Takeover | Password verification for changes | ✅ Current password required |
 | Man-in-the-Middle | HTTPS, HSTS | ⚠️ Enable in prod |
 | Session Hijacking | Secure cookies, token expiry | ✅ JWT expiry |
 | Credential Stuffing | Rate limiting, CAPTCHA, 2FA | ✅ CAPTCHA enabled |
@@ -281,13 +304,13 @@ VITE_TURNSTILE_SITE_KEY=...
 ### Generate Strong Secrets
 ```bash
 # Generate JWT secret
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-```
-
----
-
-## 🔐 Data Privacy Compliance
-
+### GDPR Compliance (if serving EU users)
+- [ ] Privacy policy page
+- [ ] Cookie consent banner
+- [ ] User data export feature
+- ✅ Account deletion feature (DELETE /api/user/profile/delete)
+- [ ] Data retention policy
+- ✅ Encrypted password storage (bcrypt)
 ### GDPR Compliance (if serving EU users)
 - [ ] Privacy policy page
 - [ ] Cookie consent banner
@@ -370,8 +393,52 @@ git secrets --scan
 # - Try requests from unauthorized origin
 # - Verify credentials blocked for wrong origin
 ```
+---
+
+## 🆕 Recent Security Updates (December 2025)
+
+### ✅ Implemented Features
+1. **OAuth 2.0 Integration**
+   - Google Sign-In with backend token verification
+   - Discord OAuth with secure callback handling
+   - Automatic account linking with existing emails
+   - OAuth provider validation to prevent account hijacking
+
+2. **Enhanced Password Security**
+   - Real-time password strength validation with visual feedback
+   - Password visibility toggle in all password fields
+   - Current password verification required for password changes
+   - OAuth accounts protected from password change attempts
+   - Pre-save hook prevents double hashing
+
+3. **Cloudflare Turnstile CAPTCHA**
+   - CAPTCHA required on login and signup forms
+   - Server-side verification with Cloudflare API
+   - User-friendly error handling and retry mechanism
+
+4. **Profile Management Enhancements**
+   - Comprehensive profile editing (name, email, password)
+   - Account deletion with confirmation dialog
+   - Budget and user type configuration
+   - Conditional UI rendering based on auth provider
+
+5. **User Experience Improvements**
+   - Server health checks with auto-retry (30s backend, 45s ML server)
+   - Loading states during CAPTCHA verification
+   - Toast notifications for all security-related actions
+   - Password requirements checklist on signup and profile update
+
+### 🔒 Security Best Practices Implemented
+- Password field always excluded from user queries (select: false)
+- OAuth provider stored and validated on all operations
+- Email uniqueness enforced across all auth methods
+- Current password verification prevents unauthorized changes
+- Account deletion cascades to remove all user data
 
 ---
 
+**Last Updated**: December 9, 2025
+**Security Contact**: [Your Email or Security Team]
+
 **Last Updated**: December 5, 2025
-**Security Contact**: [Your Email]
+**Security Contact**: sumeetdutta040@gmail.com

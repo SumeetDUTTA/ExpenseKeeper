@@ -10,6 +10,8 @@ The ExpenseKeeper frontend is a modern, responsive single-page application that 
 
 -   **Landing Page:** Modern, informative home page for new users with project overview, features showcase, and step-by-step guide
 -   **User Authentication:** JWT-based secure login and registration with persistent session management via Context API and localStorage
+-   **OAuth Integration:** Google and Discord OAuth authentication with automatic account linking and error handling
+-   **CAPTCHA Protection:** Cloudflare Turnstile CAPTCHA verification on login/signup forms to prevent automated attacks
 -   **Server Health Checks:** Automatic backend and ML server health checks with user-friendly toast notifications (30s backend, 45s ML server) to handle Render's auto-sleep behavior
 -   **Responsive Design:** Mobile-first design using TailwindCSS and DaisyUI, fully responsive across desktop (1920px+), tablet (768px-1024px), and mobile (320px-768px) viewports
 -   **Component-Based Architecture:** Modular React components with clear separation of concerns (pages, components, contexts, utilities)
@@ -22,6 +24,10 @@ The ExpenseKeeper frontend is a modern, responsive single-page application that 
 -   **Predictive Analytics UI:** Multi-month expense forecasting with category breakdowns, confidence indicators, and budget comparison
 -   **Theme System:** Light/dark mode toggle with CSS custom properties (design tokens) for consistent theming across all components
 -   **Accessibility:** ARIA labels, keyboard navigation, screen reader support, and semantic HTML throughout
+-   **Profile Management:** Comprehensive profile editing with name, email, and password updates
+-   **Password Security:** Real-time password strength validation with visual checklist (uppercase, digit, special character, minimum length)
+-   **Password Visibility Toggle:** Eye/EyeOff icons in password fields for convenient password viewing
+-   **OAuth Account Protection:** Password change disabled for Google/Discord OAuth users with conditional UI rendering
 -   **Toast Notifications:** React Hot Toast for success/error feedback with custom styling
 -   **Lazy Loading:** Intersection Observer for on-demand chart rendering on mobile devices to optimize performance
 
@@ -36,6 +42,8 @@ The ExpenseKeeper frontend is a modern, responsive single-page application that 
 -   **Icons:** Lucide React for consistent, customizable SVG icons
 -   **API Client:** Axios with interceptors for centralized request/response handling
 -   **Notifications:** React Hot Toast for user feedback
+-   **OAuth:** Google Sign-In SDK, Discord OAuth 2.0 integration
+-   **Security:** @marsidev/react-turnstile for CAPTCHA verification
 -   **Package Manager:** npm
 
 ## 📂 Project Structure
@@ -123,13 +131,17 @@ Follow these instructions to get the frontend running locally.
 
 ### Configuration
 
-Create a `.env` file in the frontend directory (optional):
+Create a `.env` file in the frontend directory:
 ```env
 VITE_API_TARGET=http://localhost:5000
 VITE_ML_API_URL=http://127.0.0.1:8000
+VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
+VITE_DISCORD_CLIENT_ID=your_discord_oauth_client_id
+VITE_DISCORD_REDIRECT_URI=http://localhost:5173/discord/callback
+VITE_TURNSTILE_SITE_KEY=your_cloudflare_turnstile_site_key
 ```
 
-If no `.env` file is provided, the app defaults to `http://localhost:5000` for the backend API and `http://127.0.0.1:8000` for the ML API.
+If OAuth and Turnstile variables are not provided, the app defaults to `http://localhost:5000` for the backend API and `http://127.0.0.1:8000` for the ML API, with OAuth and CAPTCHA features disabled.
 
 API configuration is handled in `src/lib/api.js` using the `VITE_API_TARGET` environment variable.
 
@@ -168,7 +180,10 @@ Users can switch between light and dark themes using the sun/moon icon in the na
 1.  New user visits `/` → Sees landing page with project overview and features
 2.  User clicks "Get Started" or "Login" → Redirected to `/login`
 3.  Login page checks backend health (`/health`) → Shows 35-second wait toast if server sleeping → Auto-retries after 30 seconds
-4.  User registers or logs in → Backend validates → Returns JWT token
+4.  User chooses authentication method:
+    - **Email/Password:** Fills form → Completes Turnstile CAPTCHA → Backend validates → Returns JWT token
+    - **Google OAuth:** Clicks "Sign in with Google" → Google Sign-In popup → Backend validates credential → Returns JWT token
+    - **Discord OAuth:** Clicks "Sign in with Discord" → Redirected to Discord authorization → Discord callback handler → Returns JWT token
 5.  Token stored in localStorage and AuthContext
 6.  User auto-redirected to `/dashboard` after successful login
 7.  Protected routes check auth status → Redirect to `/login` if unauthenticated
@@ -222,10 +237,15 @@ Users can switch between light and dark themes using the sun/moon icon in the na
 -   Predict button disabled until ML server is ready
 
 ### Profile (`/profile`)
--   User info display (name, email, account creation date)
--   Monthly budget configuration
--   Theme toggle and preferences
--   Expense statistics (total count, average, highest/lowest)
+-   User info display (name, email, account creation date, last updated)
+-   **Basic Information Update:** Edit name and email with inline form and validation
+-   **Password Management:** Change password with current password verification (local auth only)
+-   **Password Strength Indicator:** Real-time validation checklist showing requirements (min 6 chars, uppercase, digit, special char)
+-   **Password Visibility Toggle:** Eye/EyeOff icons in all password fields for easy viewing
+-   **OAuth Account Protection:** Password change section hidden for Google/Discord OAuth users
+-   Monthly budget and user type configuration
+-   Account statistics showing member since date and last profile update
+-   Account deletion with confirmation dialog
 
 ## 🧑‍💻 Author
 
