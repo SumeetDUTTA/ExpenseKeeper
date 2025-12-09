@@ -1,4 +1,5 @@
 import User from "../models/user.js";
+import Expense from "../models/expense.js";
 import { notFound, errorHandler } from "../middleware/errorHandler.js";
 import bcrypt from "bcryptjs";
 import ApiError from "../utils/ApiError.js";
@@ -113,11 +114,17 @@ async function deleteUser(req, res, next) {
 		if (!req.user || !req.user._id) {
 			return next(new errorHandler(401, 'Unauthorized'));
 		}
+		
+		// Delete all expenses associated with the user
+		await Expense.deleteMany({ user: req.user._id });
+		
+		// Delete the user account
 		const deletedUser = await User.findByIdAndDelete(req.user._id);
 		if (!deletedUser) {
 			return next(new errorHandler(404, 'User not found'));
 		}
-		return res.status(200).json({ success: true, message: 'User deleted successfully' });
+		
+		return res.status(200).json({ success: true, message: 'User and associated data deleted successfully' });
 	} catch (error) {
 		return next(new errorHandler(500, 'Internal Server Error'));
 	}
