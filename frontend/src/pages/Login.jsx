@@ -363,7 +363,12 @@ export default function Login() {
 
 	if (loading || serverChecking || mlServerChecking) {
 		return (
-			<div className="loader-screen" role="status" aria-live="polite">
+			<div className="loader-screen" role="status" aria-live="polite" style={{ 
+				display: 'flex', 
+				justifyContent: 'center', 
+				alignItems: 'center', 
+				minHeight: '100vh' 
+			}}>
 				<div style={{ textAlign: 'center' }}>
 					<LoaderCircle size={48} className="animate-spin" />
 					<div style={{ marginTop: 8, color: 'var(--muted)' }}>
