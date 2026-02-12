@@ -1,0 +1,21 @@
+{
+  "name": "expensekeeper",
+  "version": "1.0.0",
+  "description": "A full-stack personal finance application that helps users track expenses, visualize spending patterns, and leverage machine learning to predict future monthly expenses across categories. Built with React, Node.js, MongoDB, and XGBoost.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SumeetDUTTA/ExpenseKeeper.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/SumeetDUTTA/ExpenseKeeper/issues"
+  },
+  "homepage": "https://github.com/SumeetDUTTA/ExpenseKeeper#readme"
+}
