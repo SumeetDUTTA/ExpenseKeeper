@@ -1,5 +1,16 @@
 import z from "zod";
 
+const timezoneSchema = z.string().refine((value) => {
+    try {
+        Intl.DateTimeFormat("en-US", { timeZone: value }).format(new Date());
+        return true;
+    } catch {
+        return false;
+    }
+}, {
+    message: "Invalid timezone"
+});
+
 const createExpenseSchema = z.object({
     body: z.object({
         amount: z.number().positive(),
@@ -65,6 +76,8 @@ const createExpenseSchema = z.object({
         }),
         date: z.coerce.date().optional(),
         note: z.string().max(500).optional().default(''),
+        budgetItemId: z.string().length(24, "Invalid budget item id").optional(),
+        timezone: timezoneSchema.optional(),
     }),
     params: z.object({}).optional().default({}),
     query: z.object({}).optional().default({}),
@@ -135,6 +148,12 @@ const updateExpenseSchema = z.object({
         }).optional(),
         date: z.coerce.date().optional(),
         note: z.string().max(500).optional(),
+        budgetItemId: z.union([
+            z.string().length(24, "Invalid budget item id"),
+            z.literal(null),
+            z.literal('')
+        ]).optional(),
+        timezone: timezoneSchema.optional(),
     }),
     params: z.object({
         id: z.string().length(24, "Invalid MongoDB ObjectId"),

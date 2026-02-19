@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // src/pages/addExpenses.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { ArrowLeftIcon, LoaderCircle, } from "lucide-react";
@@ -12,6 +13,29 @@ export default function AddExpense() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [budgetOptions, setBudgetOptions] = useState([]);
+
+  function currentMonthKey() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  }
+
+  async function fetchMonthlyBudgets() {
+    try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const month = currentMonthKey();
+      const res = await api.get(`/api/budgets/month?month=${month}&timezone=${encodeURIComponent(timezone)}`);
+      const items = Array.isArray(res.data?.items) ? res.data.items : [];
+      setBudgetOptions(items);
+    } catch (error) {
+      console.error("Failed to load budget buckets", error);
+      setBudgetOptions([]);
+    }
+  }
+
+  useEffect(() => {
+    fetchMonthlyBudgets();
+  }, []);
 
   async function handleCreate(payload) {
     setSubmitting(true);
@@ -64,7 +88,7 @@ export default function AddExpense() {
       <div className="expense-card-body">
         <div className="card">
           {/* ExpenseForm handles the inputs — keep its API the same */}
-          <ExpenseForm onSubmit={handleCreate} submitting={submitting} />
+          <ExpenseForm onSubmit={handleCreate} submitting={submitting} budgetOptions={budgetOptions} />
         </div>
 
         {/* subtle submitting overlay so user knows request is in-flight */}

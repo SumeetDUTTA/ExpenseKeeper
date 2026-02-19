@@ -175,7 +175,7 @@
     overflow: hidden;
 }
 
-@media (max-width: 920px) {
+@media (max-width: 1080px) {
     .mobile-toggle {
         display: flex !important;
     }

@@ -12,6 +12,27 @@ const expenseSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
+    catBudget: {
+        type: String,
+        required: false,
+        trim: true,
+        default: "Other",
+    },
+    budgetItemId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: false,
+    },
+    budgetMonth: {
+        type: String,
+        required: false,
+        match: /^\d{4}-(0[1-9]|1[0-2])$/,
+    },
+    budgetTimezone: {
+        type: String,
+        required: false,
+        trim: true,
+        default: "UTC",
+    },
     category: {
         type: String,
         required: true,

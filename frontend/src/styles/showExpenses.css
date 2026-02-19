@@ -427,10 +427,20 @@
   background: rgba(99,102,241,0.06);
 }
 
+.actions-th {
+  text-align: center;
+}
+
 .actions-td {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
+  text-align: center !important;
+  white-space: nowrap;
+
+}
+
+.actions-td .buttons-edit,
+.actions-td .buttons-delete {
+  display: inline-flex;
+  margin: 0 4px;
 }
 
 .buttons-edit,
@@ -446,12 +456,14 @@
   background: var(--panel);
   border: 1px solid rgba(15, 23, 42, 0.18);
   color: var(--accent);
+  border-color: var(--accent);
 }
 
 .buttons-delete {
   background: var(--panel);
   border: 1px solid rgba(15, 23, 42, 0.18);
   color: red;
+  border-color: red;
 }
 
 /* Empty / no-data */
@@ -644,19 +656,19 @@
     /* we'll style rows as cards */
   }
 
-  .expense-table {
+  .expense-table-container .expense-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0 10px;
     min-width: 0;
   }
 
-  .thead-class {
+  .expense-table-container .thead-class {
     display: none;
   }
 
-  /* hide header on small screens */
-  .table-row {
+  /* hide header on small screens — expense table only */
+  .expense-table-container .table-row {
     display: block;
     background: var(--panel);
     margin-bottom: 10px;
@@ -666,7 +678,7 @@
     border: 1px solid rgba(15, 23, 42, 0.03);
   }
 
-  .table-row .td {
+  .expense-table-container .table-row .td {
     display: flex;
     justify-content: space-between;
     padding: 6px 0;
@@ -675,7 +687,7 @@
   }
 
   /* label on the left, value right */
-  .table-row .td::before {
+  .expense-table-container .table-row .td::before {
     content: attr(data-label);
     color: var(--muted);
     font-weight: 600;
@@ -685,11 +697,22 @@
     font-size: 12px;
   }
 
-  .table-row .actions-td {
+  .expense-table-container .table-row .actions-td {
     display: flex;
     gap: 8px;
-    justify-content: flex-end;
+    justify-content: center;
     padding-top: 8px;
+    border-top: 1px solid var(--border-color, rgba(255,255,255,0.06));
+    margin-top: 4px;
+  }
+
+  .actions-td {
+  text-align: center !important;
+  white-space: nowrap;
+  }
+
+  .expense-table-container .table-row .actions-td::before {
+    display: none;
   }
 
   /* buttons smaller on phones */
@@ -756,6 +779,11 @@
   .search-category-dropdown {
     font-size: 13px;
     padding: 9px;
+  }
+  
+  .actions-td {
+  text-align: center !important;
+  white-space: nowrap;
   }
 
   .buttons-edit,

@@ -405,11 +405,6 @@ export default function Dashboard() {
 					<h1 className="page-title">Dashboard</h1>
 					<div className="header-meta">Welcome back — here’s a quick snapshot of your spending</div>
 				</div>
-				<div className="header-actions">
-					<Link to="/add-expense" className="action-item" style={{ display: 'inline-flex', padding: 10 }}>
-						<Plus size={18} /> <span style={{ marginLeft: 8 }}>Add</span>
-					</Link>
-				</div>
 			</div>
 
 			{/* Stats Cards */}

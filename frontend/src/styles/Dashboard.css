@@ -73,7 +73,7 @@
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 28px; /* Matches screenshot spacing */
     margin-bottom: 32px;
 		width: 100%;
@@ -198,8 +198,9 @@
 	margin-bottom: 18px;
 }
 
-.expense-item {
+.recent-expenses-top-categories-card .expense-item {
 	display: flex;
+	flex-direction: row;
 	align-items: center;
 	justify-content: space-between;
 	gap: 12px;
@@ -211,12 +212,13 @@
 	transition: all var(--transition-fast);
 }
 
-.expense-item:hover {
+.recent-expenses-top-categories-card .expense-item:hover {
 	box-shadow: var(--shadow-md);
 }
 
-.expense-info {
+.recent-expenses-top-categories-card .expense-info {
 	display: flex;
+	flex-direction: row;
 	gap: 10px;
 	align-items: center;
 }

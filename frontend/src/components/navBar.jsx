@@ -7,6 +7,7 @@ import {
 	Wallet,
 	TrendingUp,
 	User,
+	Target,
 	LogOut,
 	Plus,
 	Menu
@@ -87,6 +88,10 @@ export default function NavBar() {
 
 								<NavItem to="/predict" onClick={() => setIsOpen(false)}>
 									<TrendingUp /> <span>Predict</span>
+								</NavItem>
+
+								<NavItem to="/budget-buckets" onClick={() => setIsOpen(false)}>
+									<Target /> <span>Budgets</span>
 								</NavItem>
 
 								<NavItem to="/profile" onClick={() => setIsOpen(false)}>

@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import ShowExpenses from "./pages/showExpenses.jsx";
 import Predict from "./pages/Predict";
 import Profile from "./pages/Profile";
+import BudgetBuckets from "./pages/BudgetBuckets";
 import Dashboard from "./pages/dashboard";
 import HomePage from "./pages/HomePage";
 import { useAuth } from "./contexts/authContext";
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="/expenses" element={<Private><ShowExpenses /></Private>} />
           <Route path="/add-expense" element={<Private><AddExpense /></Private>} />
           <Route path="/predict" element={<Private><Predict /></Private>} />
+          <Route path="/budget-buckets" element={<Private><BudgetBuckets /></Private>} />
           <Route path="/profile" element={<Private><Profile /></Private>} />
           <Route path="/auth/discord/callback" element={<DiscordCallback />} />
         </Routes>

@@ -63,6 +63,7 @@ export default function ShowExpenses() {
 	const [list, setList] = useState([])
 	const [loading, setLoading] = useState(false)
 	const [editing, setEditing] = useState(null)
+	const [budgetOptions, setBudgetOptions] = useState([])
 
 	// search/filter state
 	const [search, setSearch] = useState('')
@@ -95,6 +96,23 @@ export default function ShowExpenses() {
 	}
 
 	useEffect(() => { fetchExpenses() }, [])
+
+	useEffect(() => {
+		fetchBudgetOptions()
+	}, [])
+
+	async function fetchBudgetOptions() {
+		try {
+			const now = new Date()
+			const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+			const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+			const res = await api.get(`/api/budgets/month?month=${month}&timezone=${encodeURIComponent(timezone)}`)
+			setBudgetOptions(Array.isArray(res.data?.items) ? res.data.items : [])
+		} catch (error) {
+			console.error('Failed to load budget options', error)
+			setBudgetOptions([])
+		}
+	}
 
 	/* ---------- CRUD handlers ---------- */
 
@@ -407,8 +425,8 @@ export default function ShowExpenses() {
 												<tbody>
 													{chartData.map(row => (
 														<tr key={row.name} className="table-row">
-															<td className="td">{row.name}</td>
-															<td className="td">₹{row.value}</td>
+															<td className="td" data-label="Period">{row.name}</td>
+															<td className="td" data-label="Total">₹{row.value}</td>
 														</tr>
 													))}
 												</tbody>
@@ -455,7 +473,7 @@ export default function ShowExpenses() {
 											<th className="th">Category</th>
 											<th className="th">Amount</th>
 											<th className="th">Note</th>
-											<th className="th">Actions</th>
+											<th className="th actions-th">Actions</th>
 										</tr>
 									</thead>
 									<tbody>
@@ -489,7 +507,7 @@ export default function ShowExpenses() {
 								<h3 className="edit-title">Edit expense</h3>
 								<button onClick={() => setEditing(null)} className="edit-close-button" aria-label="Close edit">Close</button>
 							</div>
-							<ExpenseForm initial={editing} onSubmit={(p) => update(editing._id, p)} />
+							<ExpenseForm initial={editing} budgetOptions={budgetOptions} onSubmit={(p) => update(editing._id, p)} />
 						</div>
 					</div>
 				)

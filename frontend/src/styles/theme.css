@@ -230,3 +230,243 @@ body {
         font-size: 20px;
     }
 }
+
+/* ============================================
+   Global Mobile / Small-Screen Harmonisation
+   ============================================ */
+
+/* Prevent horizontal overflow everywhere */
+html, body {
+    overflow-x: hidden;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* ---------- Tablet (≤ 768px) ---------- */
+@media (max-width: 768px) {
+
+    /* Containers & pages */
+    .page-container,
+    .profile-page-container,
+    .expense-page-container,
+    .predict-page-container {
+        padding: 14px;
+        margin: 12px auto;
+    }
+
+    /* Typography */
+    .page-title {
+        font-size: 20px;
+    }
+
+    .page-description {
+        font-size: 13px;
+    }
+
+    /* Cards */
+    .card-body {
+        padding: 14px;
+    }
+
+    /* Flex rows → stack vertically */
+    .header-row,
+    .header,
+    .predict-page-header,
+    .profile-header-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    /* Multi-column grids → 1 col */
+    .stats-grid,
+    .budget-display-grid,
+    .account-stats-grid,
+    .profile-details-grid,
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    /* 2-col grids stay viable */
+    .action-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    /* Inputs & buttons full-width */
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+        max-width: 100%;
+        font-size: 16px; /* prevents iOS zoom */
+    }
+
+    /* Modals */
+    .modal-overlay,
+    .ek-modal-overlay,
+    .setting-modal-overlay {
+        padding: 10px;
+    }
+
+    .modal-card,
+    .ek-modal-card,
+    .modal-content,
+    .editing-modal-content {
+        max-width: 100%;
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    .modal-actions,
+    .ek-modal-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .modal-actions button,
+    .ek-modal-actions .ek-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Tables: prevent overflow */
+    .expense-table-container,
+    table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Recharts: ensure parent gives ResponsiveContainer a real width */
+    .chart-card,
+    .pie-chart-container,
+    .chart-container,
+    .predict-chart-card {
+        width: 100%;
+        min-width: 0;          /* CSS-grid item fix */
+        overflow: hidden;      /* clip overflow labels */
+    }
+
+    /* Charts grid → single column so each chart gets full width */
+    .charts-sections {
+        grid-template-columns: 1fr;
+    }
+
+    /* FABs */
+    .add-expense-button-container {
+        right: 14px;
+        bottom: 14px;
+    }
+
+    .add-expense-button {
+        width: 52px;
+        height: 52px;
+    }
+}
+
+/* ---------- Phone (≤ 480px) ---------- */
+@media (max-width: 480px) {
+
+    /* Even tighter containers */
+    .page-container,
+    .profile-page-container,
+    .expense-page-container,
+    .predict-page-container {
+        padding: 10px;
+        margin: 8px auto;
+    }
+
+    /* Smaller headings */
+    .page-title {
+        font-size: 18px;
+    }
+
+    .page-description {
+        font-size: 12px;
+    }
+
+    .card-body {
+        padding: 12px;
+    }
+
+    /* Action grid → 1 col on very small phones */
+    .action-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Buttons tap-friendly */
+    .btn-primary,
+    .btn-secondary,
+    .budget-form-submit,
+    .page-button,
+    .submit,
+    .ef-button {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        padding: 12px 14px;
+        font-size: 15px;
+    }
+
+    /* Budget form actions stack */
+    .budget-form-actions,
+    .ef-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* Stat numbers smaller */
+    .stat .amount,
+    .stats-value,
+    .budget-display-value,
+    .spent-amount {
+        font-size: 18px;
+    }
+
+    /* Charts shorter */
+    .chart-container {
+        min-height: 160px;
+    }
+
+    .pie-chart-wrapper {
+        padding: 10px;
+    }
+
+    /* Homepage hero tighter */
+    .hero-content {
+        padding: 3rem 1rem 2rem;
+    }
+
+    .hero-title {
+        font-size: 1.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.95rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .section-subtitle {
+        font-size: 0.88rem;
+    }
+
+    /* Contact form */
+    .contact-form-wrapper {
+        padding: 1rem;
+    }
+
+    /* CTA */
+    .cta-title {
+        font-size: 1.4rem;
+    }
+
+    /* Footer */
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}

@@ -7,11 +7,12 @@ const categories = [
   "Investment", "Clothing", "Education", "Personal Care"
 ];
 
-export default function ExpenseForm({ onSubmit, initial = {}, submitting = false }) {
+export default function ExpenseForm({ onSubmit, initial = {}, submitting = false, budgetOptions = [] }) {
   const [amount, setAmount] = useState(initial.amount !== undefined && initial.amount !== null ? String(initial.amount) : "");
   const [category, setCategory] = useState(initial.category || categories[0]);
   const [date, setDate] = useState(initial.date ? new Date(initial.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
   const [note, setNote] = useState(initial.description || initial.note || "");
+  const [budgetItemId, setBudgetItemId] = useState(initial.budgetItemId || "");
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export default function ExpenseForm({ onSubmit, initial = {}, submitting = false
       setCategory(initial.category || categories[0]);
       setDate(initial.date ? new Date(initial.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
       setNote(initial.description || initial.note || "");
+      setBudgetItemId(initial.budgetItemId || "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial._id]);
@@ -39,7 +41,9 @@ export default function ExpenseForm({ onSubmit, initial = {}, submitting = false
       amount: numericAmount,
       category,
       date,
-      note: note.trim()
+      note: note.trim(),
+      budgetItemId: budgetItemId || undefined,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     });
   }
 
@@ -103,6 +107,28 @@ export default function ExpenseForm({ onSubmit, initial = {}, submitting = false
               required
             />
           </div>
+        </div>
+
+        <div className="ef-row">
+          <label className="ef-label" htmlFor="ef-budget-item">Budget (optional)</label>
+          <select
+            id="ef-budget-item"
+            className="ef-input ef-select"
+            value={budgetItemId}
+            onChange={(e) => setBudgetItemId(e.target.value)}
+            disabled={submitting || budgetOptions.length === 0}
+            aria-label="Budget bucket"
+          >
+            <option value="">No budget bucket</option>
+            {budgetOptions.map((item) => (
+              <option key={item._id} value={item._id}>
+                {item.name} (₹{Number(item.remaining ?? item.allocated ?? 0).toFixed(2)} left)
+              </option>
+            ))}
+          </select>
+          {budgetOptions.length === 0 && (
+            <small className="ef-muted">Create monthly budget buckets in Profile to track remaining balance.</small>
+          )}
         </div>
 
         <div className="ef-row">
