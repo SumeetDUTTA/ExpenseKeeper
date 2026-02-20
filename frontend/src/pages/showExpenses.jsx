@@ -360,7 +360,7 @@ export default function ShowExpenses() {
 														stroke="var(--text-secondary)"
 														tick={{ fill: "var(--text-secondary)", fontSize: 12 }}
 													/>
-													<Tooltip formatter={(v) => `₹${v}`} contentStyle={{ background: "var(--card-bg)", borderColor: "var(--border-color)", color: "var(--text-primary)" }}
+													<Tooltip formatter={(v) => `₹${v.toFixed(2)}`} contentStyle={{ background: "var(--card-bg)", borderColor: "var(--border-color)", color: "var(--text-primary)" }}
 														labelStyle={{ color: "var(--text-secondary)" }} />
 													<Line type="monotone" dataKey="value" stroke="var(--accent-primary)"
 														strokeWidth={3}
@@ -398,7 +398,7 @@ export default function ShowExpenses() {
 														))}
 													</Pie>
 													<Tooltip
-														formatter={(value) => `₹${value}`}
+														formatter={(value) => `₹${value.toFixed(2)}`}
 														contentStyle={{ background: "var(--card-bg)", borderColor: "var(--border-color)", color: "var(--text-primary)" }}
 														labelStyle={{ color: "var(--text-secondary)" }}
 													/>
@@ -426,7 +426,7 @@ export default function ShowExpenses() {
 													{chartData.map(row => (
 														<tr key={row.name} className="table-row">
 															<td className="td" data-label="Period">{row.name}</td>
-															<td className="td" data-label="Total">₹{row.value}</td>
+															<td className="td" data-label="Total">₹{row.value.toFixed(2)}</td>
 														</tr>
 													))}
 												</tbody>
@@ -445,7 +445,7 @@ export default function ShowExpenses() {
 														<div className="item-category">{it.category}</div>
 														<div className="item-date">{it.parsedDate.toLocaleDateString()} · {it.note}</div>
 													</div>
-													<div className="item-amount">₹{it.amount}</div>
+													<div className="item-amount">₹{it.amount.toFixed(2)}</div>
 												</div>
 											))}
 										</div>
@@ -481,7 +481,7 @@ export default function ShowExpenses() {
 											<tr key={item._id} className="table-row" role="row">
 												<td className="td" data-label="Date">{new Date(item.date).toLocaleDateString()}</td>
 												<td className="td" data-label="Category">{item.category}</td>
-												<td className="td" data-label="Amount">₹{item.amount}</td>
+												<td className="td" data-label="Amount">₹{item.amount.toFixed(2)}</td>
 												<td className="td" data-label="Note">{item.note || '-'}</td>
 												<td className="td actions-td" data-label="Actions">
 													<button onClick={() => setEditing(item)} className="buttons-edit" aria-label={`Edit ${item.category}`}>Edit</button>
