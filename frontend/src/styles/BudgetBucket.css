@@ -472,12 +472,19 @@
 @media (max-width: 768px) {
   .modal-overlay {
     padding: 12px;
+    width: 100%;
+  }
+
+  .buckets-grid {
+    grid-template-columns: 1fr;
+    width: 100%;
   }
 
   .modal-content {
     border-radius: 14px;
     padding: 16px;
     max-height: 90vh;
+    width: 100%;
   }
 
   .modal-title {
@@ -490,6 +497,11 @@
 
   .totals-grid {
     grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .budget-display-card{
+    width: 100%;
   }
 
   .bucket-metrics-grid {
@@ -517,11 +529,21 @@
   .expense-item {
     padding: 14px;
   }
+
+  #remaining-card {
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
   .buckets-grid {
     grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .bucket-metrics-grid {
+    flex-direction: column;
   }
 
   .modal-title {

@@ -327,7 +327,7 @@ export default function BudgetBuckets() {
                       <p className="budget-display-label">Spent</p>
                       <div className="budget-display-value" style={{ fontSize: 15 }}>₹{toMoney(item.spent)}</div>
                     </div>
-                    <div className="budget-display-card metric-card">
+                    <div className="budget-display-card metric-card" id="remaining-card">
                       <p className="budget-display-label">Remaining</p>
                       <div className="budget-display-value" style={{ fontSize: 15 }}>
                         ₹{toMoney(Number(item.allocated || 0) - Number(item.spent || 0))}
