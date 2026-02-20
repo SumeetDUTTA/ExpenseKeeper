@@ -19,6 +19,7 @@ export default function BudgetBuckets() {
   const [bucketExpenses, setBucketExpenses] = useState([]);
   const [expensesLoading, setExpensesLoading] = useState(false);
   const [editingAllocated, setEditingAllocated] = useState(null);
+  const [monthlyBudgetLimit, setMonthlyBudgetLimit] = useState(0);
 
   function toMoney(value) {
     const num = Number(value || 0);
@@ -71,6 +72,17 @@ export default function BudgetBuckets() {
 
   async function updateBucketAllocated() {
     if (!selectedBucket) return;
+    // Check total allocated vs monthly budget limit
+    if (monthlyBudgetLimit > 0) {
+      const newAllocated = Number(editingAllocated || 0);
+      const otherAllocated = budgetItems
+        .filter((i) => i._id !== selectedBucket._id)
+        .reduce((sum, i) => sum + Number(i.allocated || 0), 0);
+      if (otherAllocated + newAllocated > monthlyBudgetLimit) {
+        toast.error(`Total allocated (₹${(otherAllocated + newAllocated).toFixed(2)}) would exceed your monthly budget (₹${monthlyBudgetLimit.toFixed(2)})`);
+        return;
+      }
+    }
     setSaving(true);
     try {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -105,6 +117,10 @@ export default function BudgetBuckets() {
 
   useEffect(() => {
     fetchBudgetForMonth(budgetMonth);
+    // Fetch user's monthly budget limit
+    api.get("/api/user/profile").then((res) => {
+      setMonthlyBudgetLimit(Number(res.data?.monthlyBudget || 0));
+    }).catch(() => { });
   }, [budgetMonth]);
 
   function addBudgetRow() {
@@ -112,7 +128,35 @@ export default function BudgetBuckets() {
   }
 
   function removeBudgetRow(id) {
-    setBudgetItems((prev) => prev.filter((item) => item._id !== id));
+    const item = budgetItems.find((i) => i._id === id);
+
+    // Temporary (unsaved) bucket — just remove from state
+    if (String(id).startsWith("tmp-")) {
+      setBudgetItems((prev) => prev.filter((i) => i._id !== id));
+      return;
+    }
+
+    // Persisted bucket — call API to delete it
+    const remaining = budgetItems.filter((i) => i._id !== id);
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const payloadItems = remaining
+      .filter((i) => !String(i._id).startsWith("tmp-") && String(i.name || "").trim().length > 0)
+      .map((i) => ({
+        id: i._id,
+        name: String(i.name).trim(),
+        allocated: Number(i.allocated || 0),
+      }));
+
+    api.put("/api/budgets/month", { month: budgetMonth, timezone, items: payloadItems })
+      .then((res) => {
+        setBudgetItems(Array.isArray(res.data?.items) ? res.data.items : []);
+        setBudgetTotals(res.data?.totals || { allocated: 0, spent: 0, remaining: 0 });
+        toast.success(`Removed "${item?.name || "bucket"}"`);
+      })
+      .catch((err) => {
+        console.error("Remove bucket error:", err);
+        toast.error(err.response?.data?.message || "Failed to remove bucket");
+      });
   }
 
   function updateBudgetRow(id, field, value) {
@@ -143,6 +187,22 @@ export default function BudgetBuckets() {
         toast.error("No buckets to add");
         setSaving(false);
         return;
+      }
+
+      if (payloadItems.length === 0) {
+        toast.error("No buckets to save");
+        setSaving(false);
+        return;
+      }
+
+      // Check total allocated vs monthly budget limit
+      if (monthlyBudgetLimit > 0) {
+        const totalAllocated = payloadItems.reduce((sum, item) => sum + Number(item.allocated || 0), 0);
+        if (totalAllocated > monthlyBudgetLimit) {
+          toast.error(`Total allocated (₹${totalAllocated.toFixed(2)}) exceeds your monthly budget (₹${monthlyBudgetLimit.toFixed(2)})`);
+          setSaving(false);
+          return;
+        }
       }
 
       const res = await api.put("/api/budgets/month", {
@@ -184,24 +244,39 @@ export default function BudgetBuckets() {
 
       <div className="budget-settings-card">
         <div className="card-body">
-          <h3 className="budget-settings-title">
-            <Wallet size={28} className="user-icon" />
-            Budget Buckets
-          </h3>
           <p className="budget-settings-subtitle">
             Buckets carry forward to future months until you remove them.
           </p>
-
           <form onSubmit={saveMonthlyBuckets} className="budget-form">
-            <div className="monthly-budget-field">
-              <label className="monthly-budget-label">Month</label>
-              <input
-                type="month"
-                value={budgetMonth}
-                onChange={(e) => setBudgetMonth(e.target.value)}
-                className="monthly-budget-input"
-                required
-              />
+            <div className="monthly-budget-field select-month-year">
+              <div style={{ minWidth: 150 }}>
+                <label className="monthly-budget-label">Month</label>
+                <select
+                  value={budgetMonth.split("-")[1]}
+                  onChange={(e) => setBudgetMonth(`${budgetMonth.split("-")[0]}-${e.target.value}`)}
+                  className="monthly-budget-input"
+                  required
+                >
+                  {["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"].map((m, i) => (
+                    <option key={m} value={m}>
+                      {new Date(2000, i).toLocaleString("default", { month: "long" })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ minWidth: 100 }}>
+                <label className="monthly-budget-label">Year</label>
+                <select
+                  value={budgetMonth.split("-")[0]}
+                  onChange={(e) => setBudgetMonth(`${e.target.value}-${budgetMonth.split("-")[1]}`)}
+                  className="monthly-budget-input"
+                  required
+                >
+                  {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 3 + i).map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="budget-display-grid totals-grid">
@@ -219,11 +294,16 @@ export default function BudgetBuckets() {
               </div>
               <div className="budget-display-card">
                 <div>
-                  <p className="budget-display-label">Remaining</p>
+                  <p className="budget-display-label">Savings</p>
                   <div className="budget-display-value" style={{ fontSize: 18 }}>₹{Number(budgetTotals.remaining || 0).toFixed(2)}</div>
                 </div>
               </div>
             </div>
+
+            <h3 className="budget-settings-title">
+              <Wallet size={28} className="user-icon" />
+              Budget Buckets
+            </h3>
 
             {budgetItems.length === 0 && (
               <p className="monthly-budget-helptext">No budget buckets for this month yet. Add one below.</p>

@@ -18,11 +18,19 @@
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
 }
 
+.select-month-year {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-direction: row;
+}
+
 .totals-grid {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  margin-bottom: 20px;
 }
 
 .buckets-grid {
@@ -165,6 +173,10 @@
   width: 100%;
   margin-top: 25px;
   text-align: left;
+}
+
+.monthly-budget-label {
+  padding-right: 5px;
 }
 
 .modal-section .monthly-budget-label,

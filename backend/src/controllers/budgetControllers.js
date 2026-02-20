@@ -1,4 +1,5 @@
 import MonthlyBudget from "../models/budget.js";
+import User from "../models/user.js";
 import ApiError from "../utils/ApiError.js";
 import {
   monthKeyFromDate,
@@ -125,6 +126,21 @@ async function upsertMonthBudget(req, res, next) {
           spent: 0,
           remaining: incomingItem.allocated,
         });
+      }
+    }
+
+    // Enforce monthly budget limit
+    const user = await User.findById(req.user._id).select("monthlyBudget");
+    const monthlyLimit = Number(user?.monthlyBudget || 0);
+    if (monthlyLimit > 0) {
+      const totalAllocated = nextItems.reduce((sum, item) => sum + Number(item.allocated || 0), 0);
+      if (totalAllocated > monthlyLimit) {
+        return next(
+          new ApiError(
+            400,
+            `Total allocated (₹${totalAllocated.toFixed(2)}) exceeds your monthly budget limit (₹${monthlyLimit.toFixed(2)})`
+          )
+        );
       }
     }
 
