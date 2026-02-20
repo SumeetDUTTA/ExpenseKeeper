@@ -72,20 +72,24 @@
 ---------------------------------- */
 
 .stats-grid {
-    display: grid;
+	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 28px; /* Matches screenshot spacing */
-    margin-bottom: 32px;
-		width: 100%;
+	gap: 28px;
+	/* Matches screenshot spacing */
+	margin-bottom: 32px;
+	width: 100%;
 }
 
 .stat {
-	min-height: 160px; /* Taller like your screenshot */
-	padding: 22px 24px; /* More breathing room */
+	min-height: 160px;
+	/* Taller like your screenshot */
+	padding: 22px 24px;
+	/* More breathing room */
 	background: var(--card-bg);
 	border-radius: var(--card-radius);
 	border: 1px solid var(--border-color);
-	box-shadow: var(--shadow-lg); /* Stronger visual lift */
+	box-shadow: var(--shadow-lg);
+	/* Stronger visual lift */
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
@@ -94,45 +98,51 @@
 }
 
 .stat:hover {
-    transform: translateY(-6px);
-    box-shadow: var(--shadow-xl);
+	transform: translateY(-6px);
+	box-shadow: var(--shadow-xl);
 }
 
 .stat .label {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text-secondary);
+	margin-bottom: 6px;
 }
 
 .stat .amount {
-    font-size: 34px; /* Big and clear */
-    font-weight: 700;
-    margin: 4px 0 6px 0;
-    color: var(--text-primary);
-    letter-spacing: -0.5px; /* cleaner numeric look */
+	font-size: 34px;
+	/* Big and clear */
+	font-weight: 700;
+	margin: 4px 0 6px 0;
+	color: var(--text-primary);
+	letter-spacing: -0.5px;
+	/* cleaner numeric look */
 }
 
 .stat .muted {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-top: auto;
+	font-size: 14px;
+	color: var(--text-secondary);
+	margin-top: auto;
 }
 
 .change {
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 600;
+	font-size: 14px;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-weight: 600;
+}
+
+#savings {
+	margin-top: 10px;
 }
 
 .change.increase {
-    color: var(--success);
+	color: green;
 }
 
 .change.decrease {
-    color: var(--danger);
+	color: red;
 }
 
 /* ----------------------------------
@@ -622,12 +632,15 @@
 	.stats-grid {
 		grid-template-columns: repeat(2, 1fr);
 	}
+
 	.charts-sections {
 		grid-template-columns: 1fr;
 	}
+
 	.recent-expenses-top-categories-card {
 		grid-template-columns: 1fr;
 	}
+
 	.action-grid {
 		grid-template-columns: repeat(2, 1fr);
 	}
@@ -637,18 +650,22 @@
 	.stats-grid {
 		grid-template-columns: 1fr;
 	}
+
 	.page-title {
 		font-size: 20px;
 	}
+
 	.action-grid {
 		grid-template-columns: repeat(2, 1fr);
 		gap: 10px;
 	}
+
 	.modal-card,
 	.ek-modal-card {
 		max-width: 100%;
 		padding: 16px;
 	}
+
 	.modal-actions {
 		justify-content: stretch;
 	}

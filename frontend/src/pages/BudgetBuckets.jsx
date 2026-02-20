@@ -276,20 +276,20 @@ export default function BudgetBuckets() {
 
             <div className="budget-display-grid totals-grid">
               <div className="budget-display-card">
-                <div>
+                <div className="set-card">
                   <p className="budget-display-label">Allocated</p>
                   <div className="budget-display-value" style={{ fontSize: 18 }}>₹{Number(budgetTotals.allocated || 0).toFixed(2)}</div>
                 </div>
               </div>
               <div className="budget-display-card">
-                <div>
+                <div className="set-card">
                   <p className="budget-display-label">Spent</p>
                   <div className="budget-display-value" style={{ fontSize: 18 }}>₹{Number(budgetTotals.spent || 0).toFixed(2)}</div>
                 </div>
               </div>
               <div className="budget-display-card">
-                <div>
-                  <p className="budget-display-label">Savings</p>
+                <div className="set-card">
+                  <p className="budget-display-label">Remaining</p>
                   <div className="budget-display-value" style={{ fontSize: 18 }}>₹{Number(budgetTotals.remaining || 0).toFixed(2)}</div>
                 </div>
               </div>

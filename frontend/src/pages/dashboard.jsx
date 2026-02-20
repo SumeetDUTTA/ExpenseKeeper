@@ -28,7 +28,7 @@ export default function Dashboard() {
 
 	// Dashboard stats (unchanged)
 	const [stats, setStats] = useState({
-		thisMonth: 0, lastMonth: 0, total: 0, recentExpenses: [],
+		thisMonth: 0, lastMonth: 0, monthlyBudget: 0, recentExpenses: [],
 		categoryBreakdown: {}, last6Months: [], dailyAverage: 0, transactionCount: 0
 	});
 	const [loading, setLoading] = useState(true);
@@ -113,7 +113,10 @@ export default function Dashboard() {
 	// Original fetchDashboardData logic (kept intact)
 	async function fetchDashboardData() {
 		try {
-			const res = await api.get("/api/expenses");
+			const [res, profileRes] = await Promise.all([
+				api.get("/api/expenses"),
+				api.get("/api/user/profile"),
+			]);
 			const expenses = res.data || [];
 
 			const now = new Date();
@@ -133,7 +136,8 @@ export default function Dashboard() {
 
 			const thisMonthTotal = thisMonthExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 			const lastMonthTotal = lastMonthExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-			const total = expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+			const userData = profileRes.data?.user || profileRes.data || {};
+			const monthlyBudget = Number(userData.monthlyBudget || 0);
 
 			// Category breakdown for this month
 			const categoryMap = {};
@@ -160,7 +164,7 @@ export default function Dashboard() {
 			setStats({
 				thisMonth: thisMonthTotal,
 				lastMonth: lastMonthTotal,
-				total,
+				monthlyBudget,
 				recentExpenses: expenses.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6),
 				categoryBreakdown: categoryMap,
 				last6Months,
@@ -379,6 +383,9 @@ export default function Dashboard() {
 	const percentChange = stats.lastMonth === 0 ? 0 : ((stats.thisMonth - stats.lastMonth) / Math.abs(stats.lastMonth)) * 100;
 	const isIncrease = percentChange >= 0;
 
+	const savings = stats.monthlyBudget - stats.thisMonth;
+	const isSavingIncrease = savings >= 0;
+
 	const topCategories = Object.entries(stats.categoryBreakdown)
 		.sort(([, a], [, b]) => b - a)
 		.slice(0, 6);
@@ -439,9 +446,11 @@ export default function Dashboard() {
 
 				<div className="card-body stat" role="listitem" aria-label="Total spending">
 					<div>
-						<div className="label"><DollarSign size={16} /> Total Spending</div>
-						<div className="amount">{fmt(stats.total)}</div>
-						<div className="muted">All time</div>
+						<div className="label"><DollarSign size={16} />Savings</div>
+						<div className={`change ${isSavingIncrease ? 'increase' : 'decrease'}`} id="savings">
+							{isSavingIncrease ? <TrendingUp size={34} /> : <TrendingDown size={34} />}
+							<div className="amount">{fmt(savings)}</div>
+						</div>
 					</div>
 				</div>
 			</div>

@@ -31,6 +31,16 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 20px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.set-card {
+  justify-content: space-between;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
 }
 
 .buckets-grid {
@@ -219,6 +229,7 @@
   width: 100%;
   text-align: left;
 }
+
 
 .modal-stats-grid .budget-display-card:hover {
   transform: translateY(-4px);
