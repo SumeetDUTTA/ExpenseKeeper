@@ -559,31 +559,33 @@ export default function Profile() {
 							<div className="budget-display-card">
 								<div className="budget-display-content">
 									<div>
+										<div className="budget-display-icon">
+											<Wallet size={48} />
+										</div>
 										<p className="budget-display-label">Current Monthly Budget</p>
-										<h2 className="budget-display-value">
-											₹{profile?.monthlyBudget ? Number(profile.monthlyBudget).toFixed(2) : '0.00'}
-										</h2>
 										<p className="budget-display-helptext">
 											{profile?.monthlyBudget ? '✓ Active budget limit' : '⚠ No budget set yet'}
 										</p>
 									</div>
-									<div className="budget-display-icon">
-										<Wallet size={48} />
-									</div>
+									<h2 className="budget-display-value">
+										₹{profile?.monthlyBudget ? Number(profile.monthlyBudget).toFixed(2) : '0.00'}
+									</h2>
 								</div>
 							</div>
 
 							{/* User Type Display */}
 							<div className="budget-display-card">
 								<div className="budget-display-content">
-									<div className="budget-display-icon">
-										<User size={32} />
+									<div>
+										<div className="budget-display-icon">
+											<User size={48} />
+										</div>
+										<p className="budget-display-label">Account Type</p>
+										<p className="budget-display-helptext">Your spending profile category</p>
 									</div>
-									<div className="budget-display-label">Account Type</div>
-									<div className="budget-display-value">
+									<h2 className="budget-display-value">
 										{allowedUserTypes.find(t => t.value === profile?.userType)?.label || 'Not Set'}
-									</div>
-									<div className="budget-display-helptext">Your spending profile category</div>
+									</h2>
 								</div>
 							</div>
 							<button onClick={() => setEditing(!editing)}

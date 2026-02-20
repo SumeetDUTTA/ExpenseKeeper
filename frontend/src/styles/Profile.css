@@ -370,6 +370,20 @@
 	gap: 10px;
 }
 
+.budget-display-content {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	gap: 12px;
+}
+
+.budget-display-icon {
+	color: var(--accent-2);
+	opacity: 0.5;
+	flex-shrink: 0;
+}
+
 .budget-display-label {
 	color: var(--muted);
 	font-weight: 700;
