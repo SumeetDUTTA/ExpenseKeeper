@@ -18,11 +18,21 @@ async function getOrCreateMonthBudget(userId, month, timezone) {
   let budget = await MonthlyBudget.findOne({ user: userId, monthKey: month });
   if (budget) return budget;
 
-  const latestBudget = await MonthlyBudget.findOne({ user: userId })
-    .sort({ monthKey: -1, updatedAt: -1 });
+  // Derive the immediately preceding month key (e.g. "2026-03" → "2026-02")
+  const [yearStr, monStr] = month.split("-");
+  let prevYear = Number(yearStr);
+  let prevMon = Number(monStr) - 1;
+  if (prevMon < 1) {
+    prevMon = 12;
+    prevYear -= 1;
+  }
+  const prevMonthKey = `${prevYear}-${String(prevMon).padStart(2, "0")}`;
 
-  const seededItems = latestBudget
-    ? latestBudget.items.map((item) => ({
+  // Only carry forward from the immediately preceding month so deletions are respected
+  const prevBudget = await MonthlyBudget.findOne({ user: userId, monthKey: prevMonthKey });
+
+  const seededItems = prevBudget
+    ? prevBudget.items.map((item) => ({
       name: item.name,
       allocated: Number(item.allocated) || 0,
       spent: 0,

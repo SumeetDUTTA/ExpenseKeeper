@@ -42,13 +42,15 @@
 
 .bucket-metrics-grid {
   width: 100%;
-  display: grid;
+  display: flex;
+  flex-direction: row;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
 .metric-card {
   padding: 10px;
+  width: 100%;
 }
 
 .budget-form-cancel {
@@ -78,9 +80,9 @@
 .modal-content {
   background: linear-gradient(180deg, #0f1b2d, #0b1524);
   border-radius: 20px;
-  padding: 20px;
-  width: min(100%, 820px);
-  max-width: 820px;
+  padding: 28px;
+  width: min(100%, 520px);
+  max-width: 520px;
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
@@ -89,6 +91,75 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+
+/* Wider modal for bucket details (has expenses list) */
+.modal-content:has(.expenses-list),
+.modal-content:has(.expenses-empty),
+.modal-content:has(.expenses-loading) {
+  width: min(100%, 820px);
+  max-width: 820px;
+}
+
+/* Form inside modal */
+.modal-content form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-content form .monthly-budget-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  font-size: 15px;
+  background: #0f1b2d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: #e2e8f0;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-content form .monthly-budget-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+}
+
+.modal-content form .monthly-budget-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.modal-content form .budget-form-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.modal-content form .budget-form-submit {
+  flex: 1;
+  padding: 12px 20px;
+  font-size: 15px;
+  border-radius: 10px;
+  justify-content: center;
+}
+
+.modal-content form .budget-form-cancel {
+  padding: 12px 20px;
+  font-size: 15px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.modal-content .monthly-budget-helptext {
+  color: #64748b;
+  font-size: 13px;
+  margin-top: 12px;
 }
 
 /* =========================
@@ -163,7 +234,48 @@
   font-size: 22px;
   font-weight: 700;
   color: #f1f5f9;
-  text-align: right;
+  text-align: center;
+}
+
+/* =========================
+   Editable Bucket Name
+========================= */
+.editable-name {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+  border: 1px dashed transparent;
+}
+
+.editable-name:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.edit-name-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.edit-name-input {
+  flex: 1;
+  font-size: 20px !important;
+  font-weight: 700;
+  background: #0f1b2d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #f8fafc;
+}
+
+.edit-name-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
 }
 
 /* =========================
