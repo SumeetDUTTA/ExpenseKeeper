@@ -99,11 +99,14 @@ export default function Login() {
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
 		const code = params.get("code");
+		console.log("OAuth code:", code);
 
 		if (code) {
 			(async () => {
 				try {
-					await loginWithGoogle(code); // backend exchanges code
+					console.log("Sending code to backend...");
+					await loginWithGoogle(code);
+					console.log("Backend login success");
 					nav("/dashboard");
 				} catch (err) {
 					console.error(err);
