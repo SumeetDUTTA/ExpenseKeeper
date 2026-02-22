@@ -69,17 +69,6 @@ export default function Login() {
 		}
 	}, []);
 
-	useEffect(() => {
-		const handleGoogleMessage = (event) => {
-			if (event.data.type === 'GOOGLE_LOGIN') {
-				loginWithGoogle(event.data.idToken);
-			}
-		};
-
-		window.addEventListener('message', handleGoogleMessage);
-		return () => window.removeEventListener('message', handleGoogleMessage);
-	}, [loginWithGoogle]);
-
 	// Initialize Google Sign-In once when component mounts
 	useEffect(() => {
 		if (!GOOGLE_CLIENT_ID) {
@@ -91,6 +80,9 @@ export default function Login() {
 				try {
 					window.google.accounts.id.initialize({
 						client_id: GOOGLE_CLIENT_ID,
+						use_fedcm_for_prompt: true,
+						use_fedcm_for_button: true,
+						itp_support: true,
 						callback: async (response) => {
 							if (googleCallbackProcessed.current) return;
 							googleCallbackProcessed.current = true;
@@ -329,12 +321,7 @@ export default function Login() {
 			return;
 		}
 		try {
-			// Use the One Tap prompt with proper configuration
-			window.google.accounts.id.prompt((notification) => {
-				if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-					toast.error('Please enable Google login');
-				}
-			});
+			window.google.accounts.id.prompt();
 		} catch (error) {
 			console.error("Google Sign-In error:", error);
 			toast.error("Failed to open Google Sign-In. Please use email/password login.");
