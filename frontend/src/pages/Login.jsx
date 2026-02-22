@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
 	UserPlus, Mail, Lock, User, LogIn, Eye, EyeOff,
 	LoaderCircle, Check
@@ -28,6 +29,7 @@ const BACKEND_PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%
 export default function Login() {
 	const { login, register, loginWithGoogle, loginWithDiscord } = useAuth();
 	const nav = useNavigate();
+	const location = useLocation();
 
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
@@ -79,7 +81,7 @@ export default function Login() {
 					client_id: GOOGLE_CLIENT_ID,
 					scope: "openid email profile",
 					ux_mode: "redirect",
-					redirect_uri: window.location.origin,
+					redirect_uri: window.location.origin + "/login",
 				});
 
 				window.handleGoogleLogin = () => {
@@ -97,7 +99,7 @@ export default function Login() {
 
 	// --- Handle Google OAuth Redirect ---
 	useEffect(() => {
-		const params = new URLSearchParams(window.location.search);
+		const params = new URLSearchParams(location.search);
 		const code = params.get("code");
 		console.log("OAuth code:", code);
 
