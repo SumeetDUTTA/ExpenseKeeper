@@ -40,7 +40,7 @@ export default function Login() {
 	const [serverAwake, setServerAwake] = useState(false);
 	const [mlServerChecking, setMlServerChecking] = useState(true)
 	const [mlServerAwake, setMlServerAwake] = useState(false)
-	const [googleInitialized, setGoogleInitialized] = useState(false);
+	const [googleReady, setGoogleReady] = useState(false);
 	const [turnstileToken, setTurnstileToken] = useState('');
 
 	const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -73,42 +73,47 @@ export default function Login() {
 	useEffect(() => {
 		if (!GOOGLE_CLIENT_ID) return;
 
-		const initializeGoogleOAuth = () => {
+		const init = () => {
 			if (window.google?.accounts?.oauth2) {
 				const client = window.google.accounts.oauth2.initCodeClient({
 					client_id: GOOGLE_CLIENT_ID,
 					scope: "openid email profile",
 					ux_mode: "redirect",
-					redirect_uri: window.location.origin, // must match Google Console
+					redirect_uri: window.location.origin,
 				});
 
-				// expose globally for button click
 				window.handleGoogleLogin = () => {
 					client.requestCode();
 				};
+
+				setGoogleReady(true);
 			} else {
-				setTimeout(initializeGoogleOAuth, 100);
+				setTimeout(init, 100);
 			}
 		};
 
-		initializeGoogleOAuth();
+		init();
 	}, [GOOGLE_CLIENT_ID]);
 
 	// --- Handle Google OAuth Redirect ---
 	useEffect(() => {
-		const urlParams = new URLSearchParams(window.location.search);
-		const code = urlParams.get("code");
+		const params = new URLSearchParams(window.location.search);
+		const code = params.get("code");
 
 		if (code) {
 			(async () => {
 				try {
 					await loginWithGoogle(code); // backend exchanges code
 					nav("/dashboard");
-				} catch (error) {
-					console.error("Google OAuth failed:", error);
+				} catch (err) {
+					console.error(err);
 					toast.error("Google login failed.");
 				} finally {
-					window.history.replaceState({}, document.title, window.location.pathname);
+					window.history.replaceState(
+						{},
+						document.title,
+						window.location.pathname
+					);
 				}
 			})();
 		}
@@ -394,6 +399,7 @@ export default function Login() {
 							type="button"
 							className="oauth-btn google-btn"
 							onClick={() => window.handleGoogleLogin?.()}
+							disabled={!googleReady}
 						>
 							<FaGoogle size={18} />
 							<span>{mode === "signup" ? "Sign up" : "Log in"} with Google</span>
