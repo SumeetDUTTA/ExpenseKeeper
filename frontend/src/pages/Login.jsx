@@ -28,7 +28,6 @@ const BACKEND_PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%
 export default function Login() {
 	const { login, register, loginWithGoogle, loginWithDiscord } = useAuth();
 	const nav = useNavigate();
-	const googleCallbackProcessed = useRef(false);
 
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
@@ -69,63 +68,51 @@ export default function Login() {
 		}
 	}, []);
 
-	useEffect(() => {
-		const handleGoogleMessage = (event) => {
-			if (event.data.type === 'GOOGLE_LOGIN') {
-				loginWithGoogle(event.data.idToken);
-			}
-		};
-
-		window.addEventListener('message', handleGoogleMessage);
-		return () => window.removeEventListener('message', handleGoogleMessage);
-	}, [loginWithGoogle]);
-
 	// Initialize Google Sign-In once when component mounts
+	// --- Google OAuth Code Flow (Redirect Based) ---
 	useEffect(() => {
-		if (!GOOGLE_CLIENT_ID) {
-			return;
-		}
+		if (!GOOGLE_CLIENT_ID) return;
 
-		const initializeGoogleSignIn = () => {
-			if (window.google?.accounts?.id) {
-				try {
-					window.google.accounts.id.initialize({
-						client_id: GOOGLE_CLIENT_ID,
-						callback: async (response) => {
-							if (googleCallbackProcessed.current) return;
-							googleCallbackProcessed.current = true;
-							
-							try {
-								await loginWithGoogle(response.credential);
-								nav("/dashboard");
-							} catch (error) {
-								console.error("Google callback error:", error);
-								toast.error("Google login failed. Please try again.");
-							} finally {
-								// Reset after a delay to allow future logins
-								setTimeout(() => {
-									googleCallbackProcessed.current = false;
-								}, 1000);
-							}
-						},
-						// Use popup mode instead of redirect for better compatibility
-						ux_mode: 'popup',
-						auto_select: false,
-						cancel_on_tap_outside: true
-					});
-					setGoogleInitialized(true);
-					console.log("Google Sign-In initialized successfully");
-				} catch (error) {
-					console.error("Failed to initialize Google Sign-In:", error);
-				}
+		const initializeGoogleOAuth = () => {
+			if (window.google?.accounts?.oauth2) {
+				const client = window.google.accounts.oauth2.initCodeClient({
+					client_id: GOOGLE_CLIENT_ID,
+					scope: "openid email profile",
+					ux_mode: "redirect",
+					redirect_uri: window.location.origin, // must match Google Console
+				});
+
+				// expose globally for button click
+				window.handleGoogleLogin = () => {
+					client.requestCode();
+				};
 			} else {
-				// If Google script not loaded yet, retry after a delay
-				setTimeout(initializeGoogleSignIn, 100);
+				setTimeout(initializeGoogleOAuth, 100);
 			}
 		};
 
-		initializeGoogleSignIn();
-	}, [GOOGLE_CLIENT_ID, loginWithGoogle, nav, mode]);
+		initializeGoogleOAuth();
+	}, [GOOGLE_CLIENT_ID]);
+
+	// --- Handle Google OAuth Redirect ---
+	useEffect(() => {
+		const urlParams = new URLSearchParams(window.location.search);
+		const code = urlParams.get("code");
+
+		if (code) {
+			(async () => {
+				try {
+					await loginWithGoogle(code); // backend exchanges code
+					nav("/dashboard");
+				} catch (error) {
+					console.error("Google OAuth failed:", error);
+					toast.error("Google login failed.");
+				} finally {
+					window.history.replaceState({}, document.title, window.location.pathname);
+				}
+			})();
+		}
+	}, [loginWithGoogle, nav]);
 
 	// Check if backend server is awake on component mount
 	useEffect(() => {
@@ -327,24 +314,6 @@ export default function Login() {
 		}
 	}
 
-	function handleGoogleClick() {
-		if (!googleInitialized || !window.google?.accounts?.id) {
-			toast.error("Google Sign-In is still loading. Please wait a moment.");
-			return;
-		}
-		try {
-			// Use the One Tap prompt with proper configuration
-			window.google.accounts.id.prompt((notification) => {
-				if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-					toast.error('Please enable Google login');
-				}
-			});
-		} catch (error) {
-			console.error("Google Sign-In error:", error);
-			toast.error("Failed to open Google Sign-In. Please use email/password login.");
-		}
-	}
-
 	async function handleDiscordClick() {
 		if (!DISCORD_CLIENT_ID || !DISCORD_REDIRECT_URI) {
 			toast.error("Discord auth is not configured properly.");
@@ -363,8 +332,8 @@ export default function Login() {
 
 	if (loading || serverChecking || mlServerChecking) {
 		return (
-			<div className="loader-screen" role="status" aria-live="polite" style={{ 
-				display: 'flex', 
+			<div className="loader-screen" role="status" aria-live="polite" style={{
+				display: 'flex',
 				justifyContent: 'center',
 				alignItems: 'center',
 				minHeight: '100vh'
@@ -419,21 +388,20 @@ export default function Login() {
 
 					</div>
 
-				{/* OAuth buttons */}
-				<div className="oauth-buttons">
-					<button
-						type="button"
-						className="oauth-btn google-btn"
-						onClick={handleGoogleClick}
-						disabled={!googleInitialized}
-					>
-						<FaGoogle size={18} />
-						<span>{mode === "signup" ? "Sign up" : "Log in"} with Google</span>
-					</button>
-					<button type="button" className="oauth-btn discord-btn" onClick={handleDiscordClick}>
-						<FaDiscord size={18} />
-						<span>{mode === "signup" ? "Sign up" : "Log in"} with Discord</span>
-					</button>
+					{/* OAuth buttons */}
+					<div className="oauth-buttons">
+						<button
+							type="button"
+							className="oauth-btn google-btn"
+							onClick={() => window.handleGoogleLogin?.()}
+						>
+							<FaGoogle size={18} />
+							<span>{mode === "signup" ? "Sign up" : "Log in"} with Google</span>
+						</button>
+						<button type="button" className="oauth-btn discord-btn" onClick={handleDiscordClick}>
+							<FaDiscord size={18} />
+							<span>{mode === "signup" ? "Sign up" : "Log in"} with Discord</span>
+						</button>
 					</div>
 
 					<div className="divider">
