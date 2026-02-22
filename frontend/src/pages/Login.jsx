@@ -109,7 +109,7 @@ export default function Login() {
 							}
 						},
 						// Use popup mode instead of redirect for better compatibility
-						ux_mode: 'popup',
+						ux_mode: 'redirect',
 						auto_select: false,
 						cancel_on_tap_outside: true
 					});
