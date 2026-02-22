@@ -247,11 +247,6 @@
 	margin-top: 20px;
 }
 
-.google-btn-host {
-	display: flex;
-	justify-content: center;
-}
-
 .oauth-btn {
 	display: flex;
 	align-items: center;
