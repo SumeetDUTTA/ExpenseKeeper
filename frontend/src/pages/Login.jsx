@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -122,7 +121,7 @@ export default function Login() {
 				}
 			})();
 		}
-	}, [loginWithGoogle, nav]);
+	}, [location.search, loginWithGoogle, nav]);
 
 	// Check if backend server is awake on component mount
 	useEffect(() => {
