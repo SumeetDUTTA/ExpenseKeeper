@@ -5,7 +5,7 @@ import {
 	UserPlus, Mail, Lock, User, LogIn, Eye, EyeOff,
 	LoaderCircle, Check
 } from "lucide-react";
-import { FaDiscord, FaGoogle } from "react-icons/fa";
+import { FaDiscord } from "react-icons/fa";
 import toast from "react-hot-toast";
 import { Turnstile } from "@marsidev/react-turnstile";
 
@@ -29,6 +29,7 @@ export default function Login() {
 	const { login, register, loginWithGoogle, loginWithDiscord } = useAuth();
 	const nav = useNavigate();
 	const googleCallbackProcessed = useRef(false);
+	const googleButtonRef = useRef(null);
 
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
@@ -114,6 +115,23 @@ export default function Login() {
 
 		initializeGoogleSignIn();
 	}, [GOOGLE_CLIENT_ID, loginWithGoogle, nav]);
+
+	useEffect(() => {
+		if (!googleInitialized || !googleButtonRef.current || !window.google?.accounts?.id) {
+			return;
+		}
+
+		googleButtonRef.current.innerHTML = "";
+		window.google.accounts.id.renderButton(googleButtonRef.current, {
+			type: "standard",
+			theme: "outline",
+			size: "large",
+			shape: "pill",
+			text: mode === "signup" ? "signup_with" : "signin_with",
+			logo_alignment: "left",
+			width: 320
+		});
+	}, [googleInitialized, mode]);
 
 	// Check if backend server is awake on component mount
 	useEffect(() => {
@@ -315,19 +333,6 @@ export default function Login() {
 		}
 	}
 
-	function handleGoogleClick() {
-		if (!googleInitialized || !window.google?.accounts?.id) {
-			toast.error("Google Sign-In is still loading. Please wait a moment.");
-			return;
-		}
-		try {
-			window.google.accounts.id.prompt();
-		} catch (error) {
-			console.error("Google Sign-In error:", error);
-			toast.error("Failed to open Google Sign-In. Please use email/password login.");
-		}
-	}
-
 	async function handleDiscordClick() {
 		if (!DISCORD_CLIENT_ID || !DISCORD_REDIRECT_URI) {
 			toast.error("Discord auth is not configured properly.");
@@ -404,15 +409,15 @@ export default function Login() {
 
 				{/* OAuth buttons */}
 				<div className="oauth-buttons">
-					<button
-						type="button"
-						className="oauth-btn google-btn"
-						onClick={handleGoogleClick}
-						disabled={!googleInitialized}
-					>
-						<FaGoogle size={18} />
-						<span>{mode === "signup" ? "Sign up" : "Log in"} with Google</span>
-					</button>
+					<div className="google-btn-host" aria-live="polite">
+						{googleInitialized ? (
+							<div ref={googleButtonRef} />
+						) : (
+							<button type="button" className="oauth-btn google-btn" disabled>
+								Google Sign-In is loading...
+							</button>
+						)}
+					</div>
 					<button type="button" className="oauth-btn discord-btn" onClick={handleDiscordClick}>
 						<FaDiscord size={18} />
 						<span>{mode === "signup" ? "Sign up" : "Log in"} with Discord</span>
