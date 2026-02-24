@@ -43,6 +43,7 @@ export default function Login() {
 	const [mlServerAwake, setMlServerAwake] = useState(false)
 	const [googleReady, setGoogleReady] = useState(false);
 	const [turnstileToken, setTurnstileToken] = useState('');
+	const processedGoogleCodeRef = useRef(null);
 
 	const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 	const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
@@ -101,7 +102,8 @@ export default function Login() {
 		const params = new URLSearchParams(location.search);
 		const code = params.get("code");
 
-		if (code) {
+		if (code && processedGoogleCodeRef.current !== code) {
+			processedGoogleCodeRef.current = code;
 			(async () => {
 				try {
 					await loginWithGoogle({
