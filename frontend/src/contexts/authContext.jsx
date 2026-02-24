@@ -76,9 +76,13 @@ function AuthProvider({ children }) {
         }
     }
 
-    async function loginWithGoogle(idToken) {
+    async function loginWithGoogle(authPayload) {
         try {
-            const res = await api.post("/api/auth/google", { idToken });
+            const body = typeof authPayload === "string"
+                ? { idToken: authPayload }
+                : authPayload;
+
+            const res = await api.post("/api/auth/google", body);
             if (res.data?.token) {
                 setToken(res.data.token);
                 setUser(res.data.user);
@@ -90,6 +94,7 @@ function AuthProvider({ children }) {
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message;
             toast.error(`Google Login failed: ${errorMsg}`);
+            throw error;
         }
     }
 
@@ -109,6 +114,7 @@ function AuthProvider({ children }) {
         } catch (error) {
             const errorMsg = error.response?.data?.message || error.message;
             toast.error(`Discord Login failed: ${errorMsg}`);
+            throw error;
         }
     }
 

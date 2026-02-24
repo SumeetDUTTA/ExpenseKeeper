@@ -29,7 +29,11 @@ const loginSchema = z.object({
 
 const googleAuthSchema = z.object({
     body: z.object({
-        idToken: z.string().min(1, "Google ID token is required")
+        idToken: z.string().min(1, "Google ID token is required").optional(),
+        code: z.string().min(1, "Google authorization code is required").optional(),
+        redirectUri: z.string().url("Google redirect URI must be a valid URL").optional()
+    }).refine((data) => !!data.idToken || !!data.code, {
+        message: "Either Google ID token or authorization code is required"
     }),
     params: z.object({}).optional().default({}),
     query: z.object({}).optional().default({}),

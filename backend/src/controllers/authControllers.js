@@ -71,15 +71,63 @@ async function login(req, res, next) {
 
 async function googleAuth(req, res, next) {
 	try {
-		const { idToken } = req.body;
-		if (!idToken) {
+		const { idToken, code, redirectUri } = req.body;
+
+		let resolvedIdToken = idToken;
+
+		if (!resolvedIdToken && code) {
+			if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+				throw new ApiError(500, 'Google OAuth is not configured on the server');
+			}
+
+			const resolvedRedirectUri =
+				redirectUri ||
+				process.env.GOOGLE_REDIRECT_URI ||
+				`${process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:5173'}/login`;
+
+			try {
+				const tokenRes = await axios.post(
+					'https://oauth2.googleapis.com/token',
+					new URLSearchParams({
+						code,
+						client_id: process.env.GOOGLE_CLIENT_ID,
+						client_secret: process.env.GOOGLE_CLIENT_SECRET,
+						redirect_uri: resolvedRedirectUri,
+						grant_type: 'authorization_code',
+					}),
+					{ headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+				);
+
+				resolvedIdToken = tokenRes.data?.id_token;
+			} catch (error) {
+				const providerMessage = error.response?.data?.error_description || error.response?.data?.error;
+				throw new ApiError(400, providerMessage || 'Failed to exchange Google authorization code');
+			}
+		}
+
+		if (!resolvedIdToken) {
 			throw new ApiError(400, 'Missing Google ID token');
 		}
-		const googleRes = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+
+		let googleRes;
+		try {
+			googleRes = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${resolvedIdToken}`);
+		} catch (error) {
+			const providerMessage = error.response?.data?.error_description || error.response?.data?.error;
+			throw new ApiError(400, providerMessage || 'Invalid Google ID token');
+		}
 
 		const { email, name, sub: googleId } = googleRes.data;
 		if (!email || !googleId) {
 			throw new ApiError(400, 'Google ID token is missing email or Google ID');
+		}
+
+		if (
+			process.env.GOOGLE_CLIENT_ID &&
+			googleRes.data?.aud &&
+			googleRes.data.aud !== process.env.GOOGLE_CLIENT_ID
+		) {
+			throw new ApiError(401, 'Google token audience mismatch');
 		}
 
 		let user = await User.findOne({ email });
