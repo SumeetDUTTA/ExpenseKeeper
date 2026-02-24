@@ -1,76 +1,122 @@
 # ExpenseKeeper
 
-A full-stack personal finance application that helps users track expenses, visualize spending patterns, and leverage machine learning to predict future monthly expenses across categories. Built with React, Node.js, MongoDB, and XGBoost.
+A full-stack personal finance platform for tracking expenses, planning monthly budgets, visualizing spending trends, and forecasting future expenses with machine learning.
+
+ExpenseKeeper combines a React frontend, an Express + MongoDB backend, and a Python FastAPI ML service to deliver end-to-end expense management with predictive analytics.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Core Features](#core-features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Run the Application](#run-the-application)
+- [API Overview](#api-overview)
+- [Machine Learning Summary](#machine-learning-summary)
+- [Development Notes](#development-notes)
+- [Scripts](#scripts)
+- [Author](#author)
 
 ## Overview
 
-ExpenseKeeper combines traditional expense management with predictive analytics to provide users with actionable insights about their spending behavior. The platform automatically categorizes transactions, generates visual analytics, and uses a universal XGBoost model to forecast future spending based on historical patterns, budget context, and user profile.
+ExpenseKeeper is built as a production-style academic project focused on practical personal finance workflows:
 
-## Screenshots
+- Secure authentication (JWT + OAuth + CAPTCHA)
+- Expense CRUD with category/date filtering and analytics
+- Monthly budget bucket planning with allocation/spending tracking
+- Dashboard and chart-based insights
+- ML-powered multi-month category predictions
 
-### Dashboard
-![Dashboard Overview](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Dashbord_1.png)
-![Dashboard Analytics](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Dashboard_2.png)
-*Main dashboard showing monthly spending trends, category distribution, and analytics*
+## Architecture
+
+The application is split into three services:
+
+1. **Frontend (`frontend/`)**
+   - React + Vite single-page application
+   - Routing, auth context, charts, forms, and responsive UI
+
+2. **Backend (`backend/`)**
+   - Express 5 API with MongoDB (Mongoose)
+   - JWT auth, Google/Discord OAuth, Turnstile verification, validation, rate limiting, and ML proxy
+
+3. **ML Service (`mlModel/`)**
+   - FastAPI-based inference service with XGBoost model
+   - Category-level future expense forecasting with guardrails
+
+## Core Features
+
+### Authentication & Security
+- JWT login/registration with bcrypt password hashing
+- OAuth 2.0 (Google and Discord)
+- Cloudflare Turnstile CAPTCHA on login/register
+- Redis-backed rate limiting (general + auth-specific)
+- Helmet security headers + CORS controls
+
+### User & Profile Management
+- Profile fetch/update endpoints (`name`, `email`, `password`, `monthlyBudget`, `userType`)
+- Separate user metadata endpoint for onboarding flows
+- OAuth users handled safely for password management
 
 ### Expense Management
-![Expense List](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Expenses_2.png)
-![Expense Analytics](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Expenses_1.png)
-![Add Expense](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Add_Expenses.png)
-*Comprehensive expense tracking with search, filter, and analytics features*
+- Create, list, update, delete expenses
+- Category/date/search filtering
+- Visual analytics and period summaries
 
-### AI Predictions
-![Prediction Interface](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Predict_1.png)
-![By Category Predictions](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Predict_2.png)
-*ML-powered expense forecasting with category-wise breakdown*
+### Budget Buckets
+- Monthly bucket allocation workflow
+- Budget month summary (allocated, spent, remaining)
+- Allocation validation against configured monthly budget limits
 
-### Profile Management
-![Profile Settings](https://github.com/SumeetDUTTA/ExpenseKeeper/blob/main/images/Profile.png)
-*User profile customization with budget and preferences*
+### Predictive Analytics
+- 1-12 month forecasting via XGBoost
+- Category-wise prediction outputs
+- Budget-aware and user-type-aware modeling
+- Smart guardrails for realistic projections
 
-## Technologies Used
+## Tech Stack
 
-- **Frontend:** React (Vite), React Router, Recharts, Lucide Icons, React Hot Toast, TailwindCSS, DaisyUI, @marsidev/react-turnstile
-- **Backend:** Node.js, Express.js 5.x, JWT authentication, OAuth 2.0 (Google, Discord), Zod 4.x validation, bcrypt
-- **Database:** MongoDB with Mongoose 8.x ODM
-- **Rate Limiting:** Redis (Upstash) - 50 req/min general, 5 req/min auth
-- **Security:** Cloudflare Turnstile CAPTCHA verification
-- **Machine Learning:** Python, XGBoost, FastAPI, Optuna (hyperparameter tuning), scikit-learn, pandas, numpy
-- **Development:** Nodemon (backend), Vite dev server (frontend), Uvicorn (ML API)
+- **Frontend:** React, Vite, React Router, Recharts, TailwindCSS, DaisyUI, Axios, React Hot Toast, Lucide
+- **Backend:** Node.js, Express 5, MongoDB, Mongoose, JWT, bcrypt, Zod, Axios, Helmet, Morgan
+- **Security:** Cloudflare Turnstile, CORS, Redis + rate-limit middleware
+- **ML:** Python, FastAPI, XGBoost, scikit-learn, pandas, numpy, Optuna
 
 ## Project Structure
 
-```
-├── backend/           # Express API server
+```text
+ExpenseKeeper/
+├── backend/                    # Express API server
 │   ├── src/
-|   |   ├── config/
+│   │   ├── config/
 │   │   ├── controllers/
-|   |   ├── middleware/
-|   |   ├── mlService/
+│   │   ├── middleware/
+│   │   ├── mlServices/
 │   │   ├── models/
 │   │   ├── routes/
-|   |   ├── utils/
-|   |   ├── validators/
+│   │   ├── utils/
+│   │   ├── validators/
 │   │   └── server.js
 │   └── package.json
-├── frontend/          # React + Vite application
+├── frontend/                   # React + Vite application
+│   ├── public/
 │   ├── src/
 │   │   ├── components/
 │   │   ├── contexts/
 │   │   ├── lib/
 │   │   ├── pages/
 │   │   ├── styles/
-│   │   ├── App.css
 │   │   ├── App.jsx
-│   │   ├── index.css
 │   │   └── main.jsx
 │   └── package.json
-├── mlModel/           # Python ML service
+├── mlModel/                    # FastAPI + XGBoost service
 │   ├── ml_api.py
-│   ├── train_model.py
 │   ├── predict_expense.py
-│   ├── training_data.csv
-│   └── requirements.txt
+│   ├── train_model.py
+│   ├── requirements.txt
+│   └── expense_forecast_model.json
+├── SECURITY.md
 └── README.md
 ```
 
@@ -78,248 +124,177 @@ ExpenseKeeper combines traditional expense management with predictive analytics 
 
 ### Prerequisites
 
-- Node.js (v16+)
-- Python (v3.9+)
+- Node.js v16+
+- Python v3.9+
 - MongoDB (local or Atlas)
+- Redis/Upstash Redis (recommended for production-like setup)
 
-### Installation
+### 1) Backend Setup
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/SumeetDUTTA/ExpenseKeeper.git
-   cd ExpenseKeeper
-   ```
+```bash
+cd backend
+npm install
+```
 
-2. **Backend Setup:**
-   ```bash
-   cd backend
-   npm install
-   ```
-   Create a `.env` file in `backend/` with:
-   ```
-   MONGODB_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret_key
-   PORT=5000
-   ML_API_URL=http://127.0.0.1:8000
-   UPSTASH_REDIS_REST_URL=your_upstash_redis_url
-   UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
-   ```
+Create `backend/.env` (see full variables below).
 
-3. **Frontend Setup:**
-   ```bash
-   cd frontend
-   npm install
-   ```
-   Create a `.env` file in `frontend/` with:
-   ```
-   VITE_API_TARGET=http://localhost:5000
-   VITE_ML_API_URL=http://127.0.0.1:8000
-   ```
+### 2) Frontend Setup
 
-4. **ML Model Setup:**
-   ```bash
-   cd mlModel
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+```bash
+cd frontend
+npm install
+```
 
-### Running the Application
+Create `frontend/.env` (see full variables below).
 
-Start all three services in separate terminals:
+### 3) ML Service Setup
 
-1. **Backend:**
-   ```bash
-   cd backend
-   npm run dev  # Development mode with hot-reload
-   # OR
-   npm start    # Production mode
-   ```
+```bash
+cd mlModel
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+# source venv/bin/activate
 
-2. **Frontend:**
-   ```bash
-   cd frontend
-   npm run dev
-   ```
+pip install -r requirements.txt
+```
 
-3. **ML API:**
-   ```bash
-   cd mlModel
-   uvicorn ml_api:app --reload --host 0.0.0.0 --port 8000
-   ```
+## Environment Variables
 
-The application will be available at:
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:5000`
-- ML API: `http://127.0.0.1:8000`
+### Backend (`backend/.env`)
 
-## Core Features
-
-### Landing & Authentication
-- **Marketing Home Page:** Dedicated landing page for new visitors explaining features, workflow, and technology stack
-- **Auto-redirect:** Authenticated users automatically redirected to dashboard
-- **Secure Authentication:** JWT-based signup/login with bcrypt password hashing
-- **OAuth Integration:** Google and Discord OAuth authentication for seamless login
-- **CAPTCHA Protection:** Cloudflare Turnstile CAPTCHA on login/signup to prevent bot attacks
-- **Server Health Checks:** Automatic health checks for backend and ML server with user-friendly wait notifications (30s backend, 45s ML server) to handle Render's auto-sleep behavior
-
-### User Management
-- **User Profiles:** Customizable profiles with monthly budget settings and user type selection (college student, young professional, family moderate/high, luxury lifestyle, senior retired)
-- **Profile Updates:** Edit name, email, and password with real-time validation and password strength checklist
-- **Password Security:** Password change requires current password verification with visual strength indicators (uppercase, digit, special character)
-- **OAuth Account Handling:** Password changes disabled for Google/Discord OAuth accounts with clear user feedback
-- **Theme Support:** Light and dark mode with persistent preferences
-
-### Expense Management
-- **CRUD Operations:** Add, view, edit, and delete expenses with amount, category, date, and notes
-- **Category Organization:** 13 pre-defined categories (Food & Drink, Travel, Utilities, Entertainment, Health & Fitness, Shopping, Rent, Personal Care, Education, Investments, Groceries, Miscellaneous, Transportation)
-- **Search & Filter:** Real-time search and category-based filtering
-- **Responsive Design:** Mobile-first UI with adaptive layouts
-
-### Data Visualization
-- **Dashboard Analytics:**
-  - Monthly spending overview with vs. previous month comparison
-  - Daily average spending calculation
-  - Category distribution pie chart
-  - 6-month spending trend line chart
-  - Top spending categories with progress bars
-- **Expense History:**
-  - Time-series line chart with interactive brush/zoom
-  - Aggregation modes: daily, weekly, monthly
-  - Custom date range selection
-  - Period breakdown tables
-
-### Predictive Analytics
-- **Expense Forecasting:** Multi-month predictions (1-12 months) using XGBoost regression
-- **Category-Level Predictions:** Individual forecasts per expense category
-- **Budget-Aware Models:** Predictions adapt to user's monthly budget and spending profile
-- **User Archetypes:** Model trained on 6 user types (college student, young professional, family moderate/high, luxury lifestyle, senior retired)
-- **Smart Guardrails:** 15% maximum month-over-month change constraint for fixed-cost categories (Rent, Personal Care) to ensure realistic predictions
-- **Production Caching:** Redis-backed response caching in production (disabled in development) for improved performance
-
-## Machine Learning Details
-
-The prediction engine uses a universal XGBoost model trained on synthetic transaction data covering multiple user profiles and budget ranges (₹3,000 - ₹60,000/month).
-
-**Features (36 total):**
-- Time-series signals: 1/2/3/12-month lags, 3/6/12-month rolling averages, Rolling3_Median, Volatility_6
-- Trend indicators: 3-month trend, percentage change
-- Calendar features: month number, sine/cosine seasonality, is_festival_season
-- Budget context: log budget, budget category buckets, spend-to-budget ratio, category_ratio
-- Behavioral mix: category one-hot encodings, user type encodings, category share of total spend
-
-**Performance:**
-- MAE (rupees): ₹863.13 - Average absolute rupee error per month
-- RMSE (rupees): ₹1,771.70 - Root mean squared error
-- Model Accuracy: ~89-92% across different user types and budget ranges
-- Handles diverse spending patterns from ₹3,000 to ₹60,000 monthly budgets
-- Optimized with Optuna (513 trees, depth 12, learning rate 0.0551)
-
-**Smart Guardrails:**
-- **Fixed-Cost Categories (Rent, Personal Care):** Maximum 15% month-over-month change to prevent unrealistic predictions
-- **Variable Categories (Food & Drink, Entertainment, Travel, etc.):** Outlier prevention with 0.3x to 2x recent average bounds
-- **Zero-value Handling:** Model predictions trusted when previous month is ₹0
-
-See `mlModel/README.md` for detailed ML documentation.
-
-## API Endpoints
-
-### Backend (Express)
-- `POST /api/auth/signup` - User registration with Turnstile CAPTCHA verification
-- `POST /api/auth/login` - User login with Turnstile CAPTCHA verification
-- `POST /api/auth/google` - Google OAuth authentication
-- `GET /api/auth/discord/callback` - Discord OAuth callback handler
-- `GET /api/auth/health` - Backend health check endpoint
-- `GET /api/expenses` - Get all user expenses (with optional filters)
-- `POST /api/expenses` - Create new expense
-- `PATCH /api/expenses/:id` - Update expense
-- `DELETE /api/expenses/:id` - Delete expense
-- `GET /api/user/profile` - Get user profile
-- `PATCH /api/user/profile` - Update user profile (name, email, password, budget, userType)
-- `DELETE /api/user/profile/delete` - Delete user account
-- `PATCH /api/user/meta` - Update user metadata (budget, user type)
-- `POST /api/predict` - ML prediction proxy with Redis caching (production only)
-
-### ML API (FastAPI)
-- `GET /docs` - Defauld FastAPI endpoint
-- `POST /predict` - Get expense predictions with smart guardrails for multiple months and categories
-
-## Development
-
-### Code Quality
-- Frontend: ESLint
-- Backend: Zod schema validation, error middleware
-- Consistent design tokens across CSS modules
-- Accessible UI with ARIA labels
-
-### Environment Variables
-
-**Backend (.env):**
 ```env
-NODE_ENV=development           # Set to 'production' to enable Redis caching
+NODE_ENV=development
 PORT=5000
 MONGODB_URI=your_mongodb_uri
 JWT_SECRET=your_jwt_secret
+JWT_EXPIRE=7d
+
 ML_API_URL=http://127.0.0.1:8000
-UPSTASH_REDIS_REST_URL=your_redis_url
-UPSTASH_REDIS_REST_TOKEN=your_redis_token
 CORS_ORIGIN=http://localhost:5173
-GOOGLE_CLIENT_ID=your_google_oauth_client_id
-GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
-DISCORD_CLIENT_ID=your_discord_oauth_client_id
-DISCORD_CLIENT_SECRET=your_discord_oauth_client_secret
+
+UPSTASH_REDIS_REST_URL=your_upstash_redis_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+DISCORD_CLIENT_ID=your_discord_client_id
+DISCORD_CLIENT_SECRET=your_discord_client_secret
 DISCORD_REDIRECT_URI=http://localhost:5000/api/auth/discord/callback
-TURNSTILE_SECRET_KEY=your_cloudflare_turnstile_secret_key
+
+TURNSTILE_SECRET_KEY=your_turnstile_secret_key
 ```
 
-**Frontend (.env):**
+### Frontend (`frontend/.env`)
+
 ```env
-VITE_API_TARGET=http://localhost:5000      # Backend API URL
-VITE_ML_API_URL=http://127.0.0.1:8000      # ML API URL (optional, falls back to localhost:8000)
-VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
-VITE_DISCORD_CLIENT_ID=your_discord_oauth_client_id
+VITE_API_TARGET=http://localhost:5000
+VITE_ML_API_URL=http://127.0.0.1:8000
+
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+VITE_DISCORD_CLIENT_ID=your_discord_client_id
 VITE_DISCORD_REDIRECT_URI=http://localhost:5173/discord/callback
-VITE_TURNSTILE_SITE_KEY=your_cloudflare_turnstile_site_key
+
+VITE_TURNSTILE_SITE_KEY=your_turnstile_site_key
 ```
 
-**ML Model:**
-- No environment variables required for local development
-- Uses port 8000 by default
+## Run the Application
 
-### Testing
-Run frontend dev server with hot reload:
+Run all three services in separate terminals.
+
+### Backend
+```bash
+cd backend
+npm run dev
+```
+
+### Frontend
 ```bash
 cd frontend
 npm run dev
 ```
 
-Build for production:
+### ML API
 ```bash
-npm run build
+cd mlModel
+uvicorn ml_api:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Development Notes
-- Redis caching is **disabled** in development (`NODE_ENV !== 'production'`) for faster iteration
-- Health checks automatically handle Render's server sleep with 30-45 second wait notifications
-- ML server health checks have longer timeouts (8s vs 5s) due to model loading overhead
+### Local URLs
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:5000`
+- ML API: `http://127.0.0.1:8000`
 
-## Contributing
+## API Overview
 
-This is a completed academic project. For any questions or issues, please contact the repository owner.
+### Health
+- `GET /health` - backend service health check
 
-## License
+### Auth (`/api/auth`)
+- `POST /register`
+- `POST /login`
+- `POST /google`
+- `POST /discord`
+- `GET /discord/callback`
 
-This project is for educational purposes. All rights reserved.
+### User (`/api/user`)
+- `GET /profile`
+- `PATCH /profile`
+- `DELETE /profile/delete`
+- `PATCH /meta`
 
-## Acknowledgments
+### Expenses (`/api/expenses`)
+- `GET /`
+- `POST /`
+- `PATCH /:id`
+- `DELETE /:id`
 
-- Built as a 5th semester project
-- ML model inspired by time-series forecasting best practices
-- UI/UX design follows modern dashboard patterns
+### Budgets (`/api/budgets`)
+- `GET /month`
+- `PUT /month`
+- `GET /summary`
+
+### Predictions (`/api/predict`)
+- `POST /`
+
+## Machine Learning Summary
+
+- Universal XGBoost regressor trained on multi-profile spending behavior
+- Forecast horizon supports multiple future months
+- Features include lags, rolling statistics, trend indicators, seasonality, budget context, and user-type signals
+- Guardrails cap unrealistic swings for fixed-cost categories and bound variable categories
+
+For model internals and training details, see `mlModel/README.md`.
+
+## Development Notes
+
+- In development, Redis caching for prediction responses is typically disabled to speed iteration.
+- Frontend includes backend/ML health checks to handle sleeping deployments with user-facing wait/retry flows.
+- Validation is handled with Zod schemas on backend routes.
+
+## Scripts
+
+### Backend (`backend/package.json`)
+- `npm run dev` - run with nodemon
+- `npm start` - run with Node.js
+
+### Frontend (`frontend/package.json`)
+- `npm run dev` - start Vite dev server
+- `npm run build` - production build
+- `npm run preview` - preview production build
+- `npm run lint` - run ESLint
+
+## Author
+
+- **Sumeet Dutta** (with project collaborator Sahil Kumar)
+- Repository: [ExpenseKeeper](https://github.com/SumeetDUTTA/ExpenseKeeper)
+- Live App: https://expense-keeper-two.vercel.app/
 
 ---
 
-**Author:** Sumeet Dutta and Sahil Kumar
-**Repository:** [ExpenseKeeper](https://github.com/SumeetDUTTA/ExpenseKeeper)
-**Website:** https://expense-keeper-two.vercel.app/
+For deeper implementation details, refer to:
 
+- `backend/README.md`
+- `frontend/README.md`
+- `mlModel/README.md`

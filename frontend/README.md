@@ -30,6 +30,10 @@ The ExpenseKeeper frontend is a modern, responsive single-page application that 
 -   **OAuth Account Protection:** Password change disabled for Google/Discord OAuth users with conditional UI rendering
 -   **Toast Notifications:** React Hot Toast for success/error feedback with custom styling
 -   **Lazy Loading:** Intersection Observer for on-demand chart rendering on mobile devices to optimize performance
+-   **Budget buckets by modal:** The Budget Buckets page now opens a dedicated modal to add new buckets while keeping the inline list read-only until you review details, aligning with the refreshed FAB interaction.
+-   **Editable bucket details:** Bucket names can be edited directly inside the details modal, with inline save/cancel controls and immediate persistence through the same API used for allocations.
+-   **Monthly selector & layout polish:** Budget months now use explicit month/year dropdowns that stay left-aligned, and the spent/remaining metric cards stack vertically on narrow screens to avoid cramped layouts.
+-   **Onboarding/profile sync:** The dashboard now fetches `monthlyBudget` from the profile endpoint alongside expenses so savings calculations show real data immediately, and the welcome modal continues to surface budget/user-type prompts when metadata is missing.
 
 ## 🛠️ Technologies Used
 
@@ -50,10 +54,11 @@ The ExpenseKeeper frontend is a modern, responsive single-page application that 
 
 ```
 frontend/
-├── public/                  # Static assets served at root
+├── public/                         # Static assets served at root
 ├── src/
-│   ├── assets/              # Images, icons, and media files
-│   ├── components/          # Reusable UI components
+│   ├── assets/                     # Images, icons, and media files
+│   ├── components/                 # Reusable UI components
+|   |   |── DiscordCallback.jsx     # Handles Discord OAuth callback and token exchange
 │   │   ├── ErrorBoundary.jsx       # Error boundary for graceful failure handling
 │   │   ├── expenseForm.jsx         # Form component for adding/editing expenses
 │   │   ├── ExpenseNotFound.jsx     # 404 component for missing expenses
@@ -61,20 +66,22 @@ frontend/
 │   │   ├── rateLimitedUI.jsx       # Rate limit feedback component
 │   │   ├── popUp.jsx               # To change user budget and user type
 │   │   └── ThemeSwitcher.jsx       # Theme toggle switch component
-│   ├── contexts/            # React Context providers
+│   ├── contexts/                   # React Context providers
 │   │   └── authContext.jsx         # Authentication state management
-│   ├── lib/                 # Shared utilities and configurations
+│   ├── lib/                        # Shared utilities and configurations
 │   │   └── api.js                  # Axios instance with interceptors
-│   ├── pages/               # Page-level components
+│   ├── pages/                      # Page-level components
 │   │   ├── addExpenses.jsx         # Add new expense page
+|   |   ├── BudgetBuckets.jsx       # Budget buckets management page
 │   │   ├── dashboard.jsx           # Main analytics dashboard
 │   │   ├── HomePage.jsx            # Landing page for new users
 │   │   ├── Login.jsx               # Login/Signup page
 │   │   ├── Predict.jsx             # ML prediction interface
 │   │   ├── Profile.jsx             # User profile and settings
 │   │   └── showExpenses.jsx        # Expense list and analytics
-│   ├── styles/              # Component-specific CSS modules
+│   ├── styles/                     # Component-specific CSS modules
 │   │   ├── AddExpense.css          # Add expense page styles
+|   |   ├── BudgetBucket.css        # Budget buckets page styles
 │   │   ├── Dashboard.css           # Dashboard page styles
 │   │   ├── ExpenseForm.css         # Expense form component styles
 │   │   ├── homePage.css            # Landing page styles
@@ -86,18 +93,18 @@ frontend/
 │   │   ├── showExpenses.css        # Expenses list page styles
 │   │   ├── theme.css               # Theme-specific styles
 │   │   └── ThemeSwitcher.css       # Theme toggle component styles
-│   ├── App.jsx              # Main app component with routes
-│   ├── App.css              # Global application styles
-│   ├── index.css            # CSS reset, design tokens, base styles
-│   └── main.jsx             # Application entry point
-├── .gitignore               # Git ignore file
-├── eslint.config.js         # ESLint configuration
-├── index.html               # HTML template
-├── package.json             # Dependencies and scripts
-├── postcss.config.js        # PostCSS configuration
-├── tailwind.config.js       # TailwindCSS configuration
-├── vercel.json              # Vercel Configuration
-├── vite.config.js           # Vite build configuration
+│   ├── App.jsx                     # Main app component with routes
+│   ├── App.css                     # Global application styles
+│   ├── index.css                   # CSS reset, design tokens, base styles
+│   └── main.jsx                    # Application entry point
+├── .gitignore                      # Git ignore file
+├── eslint.config.js                # ESLint configuration
+├── index.html                      # HTML template
+├── package.json                    # Dependencies and scripts
+├── postcss.config.js               # PostCSS configuration
+├── tailwind.config.js              # TailwindCSS configuration
+├── vercel.json                     # Vercel Configuration
+├── vite.config.js                  # Vite build configuration
 └── README.md
 
 
@@ -223,6 +230,12 @@ Users can switch between light and dark themes using the sun/moon icon in the na
 -   Category distribution pie chart with percentages and color-coded segments
 -   Period breakdown table showing spending by time interval
 -   Edit/delete actions with confirmation dialogs
+
+### Budget Buckets (`/budget-buckets`)
+-   A dedicated budgeting space where users plan monthly spending by category (for example Food, Travel, Utilities) before expenses are made.
+-   Helps users stay intentional with money by showing how much is allocated, how much is spent, and what remains for each category.
+-   Supports month-by-month budget planning so users can compare changes over time and keep spending goals realistic.
+-   Designed to reduce overspending stress with clear visual feedback, simple controls, and mobile-friendly readability.
 
 ### Predict (`/predict`)
 -   ML server health check on page load with 50-second wait toast if server sleeping

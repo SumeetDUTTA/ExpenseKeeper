@@ -161,14 +161,14 @@ export default function HomePage() {
             
             <div className="feature-card">
               <div className="feature-icon">🎯</div>
-              <h3 className="feature-title">Budget Planning</h3>
-              <p className="feature-description">Set monthly budgets and track your progress. Get alerts when you're approaching your spending limits.</p>
+              <h3 className="feature-title">Budget Buckets</h3>
+              <p className="feature-description">Plan your monthly spending with category-based budget buckets. Track what's allocated, spent, and remaining for each category.</p>
             </div>
             
             <div className="feature-card">
               <div className="feature-icon">🔒</div>
               <h3 className="feature-title">Secure & Private</h3>
-              <p className="feature-description">Your financial data is protected with JWT authentication and encrypted storage. Your privacy is our priority.</p>
+              <p className="feature-description">Protected with JWT auth, bcrypt hashing, Google/Discord OAuth, Cloudflare Turnstile CAPTCHA, and Redis rate limiting.</p>
             </div>
           </div>
         </div>
@@ -271,6 +271,20 @@ export default function HomePage() {
             
             <div className="experience-item">
               <div className="experience-header">
+                <span className="experience-icon">�</span>
+                <h3 className="experience-title">Budget Buckets</h3>
+              </div>
+              <ul className="experience-list">
+                <li>Plan monthly spending by category</li>
+                <li>Track allocated vs spent amounts</li>
+                <li>See remaining budget at a glance</li>
+                <li>Month-by-month budget planning</li>
+                <li>Validation against budget limits</li>
+              </ul>
+            </div>
+            
+            <div className="experience-item">
+              <div className="experience-header">
                 <span className="experience-icon">👤</span>
                 <h3 className="experience-title">Profile</h3>
               </div>
@@ -278,7 +292,7 @@ export default function HomePage() {
                 <li>Manage your account information</li>
                 <li>Update monthly budget settings</li>
                 <li>View account statistics</li>
-                <li>Customize preferences</li>
+                <li>Customize user type for predictions</li>
                 <li>Toggle between light/dark themes</li>
               </ul>
             </div>
@@ -307,15 +321,19 @@ export default function HomePage() {
           <div className="tech-grid">
             <div className="tech-card">
               <h4>Frontend</h4>
-              <p>React • Vite • TailwindCSS • Recharts</p>
+              <p>React • Vite • React Router • TailwindCSS • DaisyUI • Recharts • Lucide</p>
             </div>
             <div className="tech-card">
               <h4>Backend</h4>
-              <p>Node.js • Express • MongoDB • JWT</p>
+              <p>Node.js • Express 5 • MongoDB • Mongoose • JWT • Zod • Redis</p>
+            </div>
+            <div className="tech-card">
+              <h4>Security</h4>
+              <p>Google/Discord OAuth • Cloudflare Turnstile • Helmet • Rate Limiting</p>
             </div>
             <div className="tech-card">
               <h4>AI/ML</h4>
-              <p>Python • XGBoost • FastAPI • Scikit-learn</p>
+              <p>Python • FastAPI • XGBoost • Optuna • Scikit-learn • Pandas</p>
             </div>
           </div>
         </div>
@@ -465,7 +483,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2025 ExpenseKeeper. All rights reserved.</p>
+            <p>&copy; 2026 ExpenseKeeper. All rights reserved.</p>
           </div>
         </div>
       </footer>

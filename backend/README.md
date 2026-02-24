@@ -22,6 +22,9 @@ The ExpenseKeeper backend is a robust Node.js/Express API that handles all serve
 -   **Database:** MongoDB with Mongoose ODM, indexed queries, and schema validation
 -   **Logging:** Morgan HTTP request logging with environment-aware formats
 -   **Error Handling:** Centralized error handling with custom ApiError class and detailed error responses
+-   **Profile & onboarding metadata:** `/api/user/profile` now surfaces the latest `monthlyBudget` and `userType`, while `/api/user/meta` lets the dashboard popup or settings screen capture those values even before the profile edit flow runs.
+-   **Budget setup workflow:** Users can define a monthly budget limit (`monthlyBudget`) that is enforced whenever `/api/budgets/month` is updated. Each new month is seeded from the immediately preceding month (so deleted buckets stay deleted) and the response includes per-bucket totals plus the aggregated `allocated`, `spent`, and `remaining` numbers.
+-   **Bucket editing & limits:** PUT `/api/budgets/month` accepts bucket arrays with optional IDs, preserves any prior spending totals when reallocating, rejects requests that would remove buckets which already have spending, enforces unique names, and returns a `400` if the total allocations exceed the user-configured monthly budget limit (the error message reports both totals).
 
 ## 🛠️ Technologies Used
 
@@ -47,6 +50,7 @@ backend/
 │   │   └── db.js                       # MongoDB connection configuration
 │   ├── controllers/
 │   │   ├── authControllers.js          # Login, register, token validation
+│   │   ├── budgetControllers.js        # Budget bucket management
 │   │   ├── expenseControllers.js       # CRUD operations for expenses
 │   │   ├── predictControllers.js       # ML prediction proxy endpoints
 │   │   ├── userControllers.js          # User profile and preferences
@@ -54,22 +58,27 @@ backend/
 │   ├── middleware/
 │   │   ├── auth.js                     # JWT authentication middleware
 │   │   ├── errorHandler.js             # Global error handling
+│   │   ├── turnstile.js                # Cloudflare Turnstile CAPTCHA verification
 │   │   └── validate.js                 # Zod schema validation middleware
 │   ├── mlServices/
 │   │   └── mlService.js                # ML API client with error handling
 │   ├── models/
+│   │   ├── budget.js                   # Mongoose budget schema
 │   │   ├── expense.js                  # Mongoose expense schema
 │   │   └── user.js                     # Mongoose user schema
 │   ├── routes/
 │   │   ├── authRoutes.js               # Authentication endpoints
+│   │   ├── budgetRoutes.js             # Budget bucket management endpoints
 │   │   ├── expenseRoutes.js            # Expense management endpoints
 │   │   ├── predictRoutes.js            # ML prediction endpoints
 │   │   └── userRoutes.js               # User profile endpoints
 │   ├── utils/
 │   │   ├── ApiError.js                 # Custom error class
+│   │   ├── budgetHelpers.js            # Budget calculation utilities
 │   │   └── redisClient.js              # Redis client configuration
 │   ├── validators/
 │   │   ├── authValidator.js            # Auth request schemas
+│   │   ├── budgetValidator.js          # Budget request schemas
 │   │   ├── expensesValidator.js        # Expense request schemas
 │   │   ├── predictValidator.js         # Prediction request schemas
 │   │   └── userValidator.js            # User request schemas
@@ -308,6 +317,25 @@ Returns category-wise expense predictions for the specified time horizon based o
 
 **Indexes:**
 -   Compound index on `user` and `date` for efficient queries
+
+### Budget Model
+```javascript
+{
+  user: ObjectId (ref: 'User', required, indexed),
+  month: String (required, format: 'YYYY-MM'),
+  buckets: [
+    {
+      name: String (required),
+      allocation: Number (required, min: 0),
+      spent: Number (default: 0)
+    }
+  ],
+  createdAt: Date (auto),
+  updatedAt: Date (auto)
+}
+```
+**Indexes:**
+-   Compound index on `user` and `month` for efficient retrieval of monthly budgets
 
 ## 🛡️ Security Features
 
