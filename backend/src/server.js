@@ -13,6 +13,7 @@ import authRoutes from './routes/authRoutes.js';
 import predictRoutes from './routes/predictRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import budgetRoutes from './routes/budgetRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
 import redisClient from './utils/redisClient.js';
 import { connectDB } from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
@@ -147,6 +148,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/user', limiter, userRoutes);
 app.use('/api/budgets', limiter, budgetRoutes);
 app.use('/api/predict', limiter, predictRoutes);
+app.use('/api/reports', limiter, reportRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

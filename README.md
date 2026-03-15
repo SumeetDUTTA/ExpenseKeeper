@@ -49,6 +49,7 @@ The application is split into three services:
 ## Core Features
 
 ### Authentication & Security
+
 - JWT login/registration with bcrypt password hashing
 - OAuth 2.0 (Google and Discord)
 - Cloudflare Turnstile CAPTCHA on login/register
@@ -56,21 +57,25 @@ The application is split into three services:
 - Helmet security headers + CORS controls
 
 ### User & Profile Management
+
 - Profile fetch/update endpoints (`name`, `email`, `password`, `monthlyBudget`, `userType`)
 - Separate user metadata endpoint for onboarding flows
 - OAuth users handled safely for password management
 
 ### Expense Management
+
 - Create, list, update, delete expenses
 - Category/date/search filtering
 - Visual analytics and period summaries
 
 ### Budget Buckets
+
 - Monthly bucket allocation workflow
 - Budget month summary (allocated, spent, remaining)
 - Allocation validation against configured monthly budget limits
 
 ### Predictive Analytics
+
 - 1-12 month forecasting via XGBoost
 - Category-wise prediction outputs
 - Budget-aware and user-type-aware modeling
@@ -204,24 +209,28 @@ VITE_TURNSTILE_SITE_KEY=your_turnstile_site_key
 Run all three services in separate terminals.
 
 ### Backend
+
 ```bash
 cd backend
 npm run dev
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm run dev
 ```
 
 ### ML API
+
 ```bash
 cd mlModel
 uvicorn ml_api:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Local URLs
+
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:5000`
 - ML API: `http://127.0.0.1:8000`
@@ -229,9 +238,11 @@ uvicorn ml_api:app --reload --host 0.0.0.0 --port 8000
 ## API Overview
 
 ### Health
+
 - `GET /health` - backend service health check
 
 ### Auth (`/api/auth`)
+
 - `POST /register`
 - `POST /login`
 - `POST /google`
@@ -239,23 +250,27 @@ uvicorn ml_api:app --reload --host 0.0.0.0 --port 8000
 - `GET /discord/callback`
 
 ### User (`/api/user`)
+
 - `GET /profile`
 - `PATCH /profile`
 - `DELETE /profile/delete`
 - `PATCH /meta`
 
 ### Expenses (`/api/expenses`)
+
 - `GET /`
 - `POST /`
 - `PATCH /:id`
 - `DELETE /:id`
 
 ### Budgets (`/api/budgets`)
+
 - `GET /month`
 - `PUT /month`
 - `GET /summary`
 
 ### Predictions (`/api/predict`)
+
 - `POST /`
 
 ## Machine Learning Summary
@@ -276,10 +291,12 @@ For model internals and training details, see `mlModel/README.md`.
 ## Scripts
 
 ### Backend (`backend/package.json`)
+
 - `npm run dev` - run with nodemon
 - `npm start` - run with Node.js
 
 ### Frontend (`frontend/package.json`)
+
 - `npm run dev` - start Vite dev server
 - `npm run build` - production build
 - `npm run preview` - preview production build
@@ -289,7 +306,7 @@ For model internals and training details, see `mlModel/README.md`.
 
 - **Sumeet Dutta** (with project collaborator Sahil Kumar)
 - Repository: [ExpenseKeeper](https://github.com/SumeetDUTTA/ExpenseKeeper)
-- Live App: https://expense-keeper-two.vercel.app/
+- Live App: <https://expense-keeper-two.vercel.app/>
 
 ---
 

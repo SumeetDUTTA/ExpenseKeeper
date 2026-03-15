@@ -3,6 +3,7 @@
 ## ✅ Current Security Measures
 
 ### 1. **Authentication & Authorization**
+
 - ✅ JWT tokens for authentication
 - ✅ Password hashing (bcrypt with 10 salt rounds)
 - ✅ Token expiration (7 days)
@@ -12,6 +13,7 @@
 - ✅ OAuth accounts protected from password changes
 
 ### 2. **Input Validation**
+
 - ✅ Zod schema validation on all inputs (auth, expenses, user updates, predictions)
 - ✅ Request body size limits (1MB)
 - ✅ Type checking and sanitization
@@ -20,17 +22,20 @@
 - ✅ User type enum validation
 
 ### 3. **Rate Limiting**
+
 - ✅ General API: 50 requests/minute per IP
 - ✅ Auth endpoints: 5 requests/minute per IP
 - ✅ Redis-backed rate limiting for distributed systems
 
 ### 4. **Bot Protection**
+
 - ✅ Cloudflare Turnstile CAPTCHA on login/signup pages
 - ✅ Server-side Turnstile token verification with Cloudflare API
 - ✅ CAPTCHA tokens single-use and time-limited
 - ✅ Frontend-side CAPTCHA validation with user feedback
 
 ### 5. **HTTP Security Headers**
+
 - ✅ Helmet.js enabled
   - X-Frame-Options: DENY
   - X-Content-Type-Options: nosniff
@@ -38,6 +43,7 @@
   - Strict-Transport-Security (HSTS)
 
 ### 6. **CORS Protection**
+
 - ✅ **FIXED**: Restricted to specific origins only
 - ✅ Credentials allowed only for whitelisted domains
 
@@ -46,6 +52,7 @@
 ## ⚠️ Security Vulnerabilities Fixed
 
 ### 🔴 CRITICAL: CORS Misconfiguration (FIXED)
+
 **Issue**: CORS was set to `*` allowing any origin
 **Fix**: Whitelist specific origins only
 **Impact**: Prevents CSRF attacks from malicious websites
@@ -55,16 +62,20 @@
 ## 🔒 Security Checklist
 
 ### Environment Variables (.env files)
+
 - [ ] Never commit `.env` files to Git
 - [ ] Use strong, random JWT_SECRET (min 32 characters)
 - [ ] Keep OAuth secrets confidential
 - [ ] Use different secrets for dev/production
 
 ### Database Security
+
 - [ ] Use environment variables for DB credentials
 - [ ] Enable MongoDB authentication
 - [ ] Use connection string encryption
+
 ### Password Security
+
 - ✅ Min 6 characters (enforced on frontend and backend)
 - ✅ Require uppercase letter (A-Z)
 - ✅ Require number (0-9)
@@ -73,7 +84,9 @@
 - ✅ Real-time password strength validation on frontend
 - ✅ Visual password strength checklist for user feedback
 - ✅ Password visibility toggle (Eye/EyeOff icons)
+
 ### API Security
+
 - ✅ Rate limiting enabled (50 req/min general, 5 req/min auth)
 - ✅ Input validation on all endpoints with detailed error messages
 - ✅ Authentication required for protected routes
@@ -84,6 +97,7 @@
 - ✅ OAuth provider validation on account linking
 
 ### API Security
+
 - ✅ Rate limiting enabled
 - ✅ Input validation on all endpoints
 - ✅ Authentication required for protected routes
@@ -96,6 +110,7 @@
 ### High Priority
 
 #### 1. **Add HTTPS in Production**
+
 ```javascript
 // Redirect HTTP to HTTPS
 if (process.env.NODE_ENV === 'production') {
@@ -110,6 +125,7 @@ if (process.env.NODE_ENV === 'production') {
 ```
 
 #### 2. **Add Security Headers Enhancement**
+
 ```javascript
 app.use(helmet({
   contentSecurityPolicy: {
@@ -129,6 +145,7 @@ app.use(helmet({
 ```
 
 #### 3. **Add Request Logging for Security Monitoring**
+
 ```javascript
 // Log suspicious activities
 app.use((req, res, next) => {
@@ -140,9 +157,11 @@ app.use((req, res, next) => {
 ```
 
 #### 4. **Sanitize User Input (XSS Prevention)**
+
 ```bash
 npm install express-mongo-sanitize xss-clean
 ```
+
 ```javascript
 import mongoSanitize from 'express-mongo-sanitize';
 import xss from 'xss-clean';
@@ -152,15 +171,19 @@ app.use(xss()); // Prevent XSS attacks
 ```
 
 #### 5. **Add CSRF Protection for Cookie-based Auth**
+
 If you plan to use cookies:
+
 ```bash
 npm install csurf
 ```
 
 #### 6. **Implement Refresh Tokens**
+
 ### Medium Priority
 
 #### 7. **Add Account Security Features**
+
 - ✅ Password change with current password verification
 - ✅ Account deletion with confirmation
 - ✅ OAuth account protection (no password changes)
@@ -175,6 +198,7 @@ npm install csurf
 - Session management (view active sessions)
 
 #### 8. **Add Audit Logging**
+
 ```javascript
 // Log important actions
 function auditLog(userId, action, details) {
@@ -184,6 +208,7 @@ function auditLog(userId, action, details) {
 ```
 
 #### 9. **Implement Data Encryption**
+
 ```javascript
 // Encrypt sensitive data at rest
 import crypto from 'crypto';
@@ -201,6 +226,7 @@ function encrypt(text) {
 ```
 
 #### 10. **Add File Upload Security** (if you plan to add this feature)
+
 - Validate file types
 - Limit file sizes
 - Scan for malware
@@ -212,6 +238,7 @@ function encrypt(text) {
 ## 🧪 Security Testing Tools
 
 ### 1. **Automated Vulnerability Scanning**
+
 ```bash
 # Check for vulnerable dependencies
 npm audit
@@ -221,20 +248,24 @@ npm audit fix
 ```
 
 ### 2. **OWASP ZAP** (Free)
+
 - Web application security scanner
-- https://www.zaproxy.org/
+- <https://www.zaproxy.org/>
 
 ### 3. **Postman Security Testing**
+
 - Test API endpoints with invalid inputs
 - Test authentication bypass attempts
 - Test rate limiting
 
 ### 4. **Browser DevTools Security Audit**
+
 - Chrome Lighthouse (Security audit)
 - Check for mixed content warnings
 - Verify HTTPS certificate
 
 ---
+
 | Attack Type | Protection | Status |
 |-------------|------------|--------|
 | SQL/NoSQL Injection | Input validation, sanitization | ✅ Zod validation + Mongoose |
@@ -259,6 +290,7 @@ npm audit fix
 ### Required Environment Variables
 
 **Backend (.env)**
+
 ```env
 # Database
 MONGO_URI=mongodb+srv://...
@@ -292,6 +324,7 @@ ML_API_URL=http://localhost:8000
 ```
 
 **Frontend (.env)**
+
 ```env
 VITE_API_TARGET=http://localhost:5000
 VITE_ML_API_URL=http://localhost:8000
@@ -302,6 +335,7 @@ VITE_TURNSTILE_SITE_KEY=...
 ```
 
 ### Generate Strong Secrets
+
 ```bash
 # Generate JWT secret
 ### GDPR Compliance (if serving EU users)
@@ -393,11 +427,13 @@ git secrets --scan
 # - Try requests from unauthorized origin
 # - Verify credentials blocked for wrong origin
 ```
+
 ---
 
 ## 🆕 Recent Security Updates (December 2025)
 
 ### ✅ Implemented Features
+
 1. **OAuth 2.0 Integration**
    - Google Sign-In with backend token verification
    - Discord OAuth with secure callback handling
@@ -429,6 +465,7 @@ git secrets --scan
    - Password requirements checklist on signup and profile update
 
 ### 🔒 Security Best Practices Implemented
+
 - Password field always excluded from user queries (select: false)
 - OAuth provider stored and validated on all operations
 - Email uniqueness enforced across all auth methods
@@ -438,4 +475,4 @@ git secrets --scan
 ---
 
 **Last Updated**: December 9, 2025
-**Security Contact**: sumeetdutta040@gmail.com
+**Security Contact**: <sumeetdutta040@gmail.com>

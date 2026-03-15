@@ -8,9 +8,11 @@ import {
 	TrendingUp,
 	User,
 	Target,
+	MessageSquare,
 	LogOut,
 	Plus,
-	Menu
+	Menu,
+	FileText
 } from "lucide-react";
 
 import { useAuth } from "../contexts/authContext.jsx";
@@ -89,7 +91,12 @@ export default function NavBar() {
 								<NavItem to="/predict" onClick={() => setIsOpen(false)}>
 									<TrendingUp /> <span>Predict</span>
 								</NavItem>
-
+							<NavItem to="/reports" onClick={() => setIsOpen(false)}>
+								<FileText /> <span>Reports</span>
+							</NavItem>
+							<NavItem to="/chat" onClick={() => setIsOpen(false)}>
+								<MessageSquare /> <span>Chat</span>
+							</NavItem>
 								<NavItem to="/budget-buckets" onClick={() => setIsOpen(false)}>
 									<Target /> <span>Budgets</span>
 								</NavItem>

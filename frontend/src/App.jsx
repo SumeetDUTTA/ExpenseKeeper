@@ -11,6 +11,8 @@ import Profile from "./pages/Profile";
 import BudgetBuckets from "./pages/BudgetBuckets";
 import Dashboard from "./pages/dashboard";
 import HomePage from "./pages/HomePage";
+import MonthlyReport from "./pages/MonthlyReport";
+import Chat from "./pages/Chat";
 import { useAuth } from "./contexts/authContext";
 import NavBar from "./components/navBar";
 import AddExpense from "./pages/addExpenses";
@@ -64,6 +66,8 @@ export default function App() {
           <Route path="/predict" element={<Private><Predict /></Private>} />
           <Route path="/budget-buckets" element={<Private><BudgetBuckets /></Private>} />
           <Route path="/profile" element={<Private><Profile /></Private>} />
+          <Route path="/reports" element={<Private><MonthlyReport /></Private>} />
+          <Route path="/chat" element={<Private><Chat /></Private>} />
           <Route path="/auth/discord/callback" element={<DiscordCallback />} />
         </Routes>
       </div>

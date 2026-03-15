@@ -8,38 +8,38 @@ The ExpenseKeeper backend is a robust Node.js/Express API that handles all serve
 
 ## ✨ Features
 
--   **JWT Authentication:** Secure token-based authentication with bcrypt password hashing and 7-day token expiry
--   **OAuth 2.0 Integration:** Google and Discord OAuth authentication with automatic account creation and linking
--   **CAPTCHA Verification:** Cloudflare Turnstile CAPTCHA validation on login/signup endpoints to prevent bot attacks
--   **User Management:** Registration, login, profile retrieval, name/email/password updates, budget configuration, and account deletion
--   **Expense CRUD:** Full expense lifecycle with search, filtering, pagination, and category-based analytics
--   **Data Aggregation:** Monthly summaries, category-wise totals, spending trends, and budget tracking
--   **ML Integration:** Proxy endpoints to Python ML API for expense predictions with error handling
--   **Rate Limiting:** Redis-backed rate limiting (50 requests/min general, 5 requests/min auth) with Upstash Redis
--   **Request Validation:** Zod schema validation for all inputs with detailed error messages
--   **Security:** Helmet.js security headers, CORS configuration, input sanitization, and error obfuscation
--   **Middleware Chain:** Authentication middleware, validation middleware, and error handling middleware
--   **Database:** MongoDB with Mongoose ODM, indexed queries, and schema validation
--   **Logging:** Morgan HTTP request logging with environment-aware formats
--   **Error Handling:** Centralized error handling with custom ApiError class and detailed error responses
--   **Profile & onboarding metadata:** `/api/user/profile` now surfaces the latest `monthlyBudget` and `userType`, while `/api/user/meta` lets the dashboard popup or settings screen capture those values even before the profile edit flow runs.
--   **Budget setup workflow:** Users can define a monthly budget limit (`monthlyBudget`) that is enforced whenever `/api/budgets/month` is updated. Each new month is seeded from the immediately preceding month (so deleted buckets stay deleted) and the response includes per-bucket totals plus the aggregated `allocated`, `spent`, and `remaining` numbers.
--   **Bucket editing & limits:** PUT `/api/budgets/month` accepts bucket arrays with optional IDs, preserves any prior spending totals when reallocating, rejects requests that would remove buckets which already have spending, enforces unique names, and returns a `400` if the total allocations exceed the user-configured monthly budget limit (the error message reports both totals).
+- **JWT Authentication:** Secure token-based authentication with bcrypt password hashing and 7-day token expiry
+- **OAuth 2.0 Integration:** Google and Discord OAuth authentication with automatic account creation and linking
+- **CAPTCHA Verification:** Cloudflare Turnstile CAPTCHA validation on login/signup endpoints to prevent bot attacks
+- **User Management:** Registration, login, profile retrieval, name/email/password updates, budget configuration, and account deletion
+- **Expense CRUD:** Full expense lifecycle with search, filtering, pagination, and category-based analytics
+- **Data Aggregation:** Monthly summaries, category-wise totals, spending trends, and budget tracking
+- **ML Integration:** Proxy endpoints to Python ML API for expense predictions with error handling
+- **Rate Limiting:** Redis-backed rate limiting (50 requests/min general, 5 requests/min auth) with Upstash Redis
+- **Request Validation:** Zod schema validation for all inputs with detailed error messages
+- **Security:** Helmet.js security headers, CORS configuration, input sanitization, and error obfuscation
+- **Middleware Chain:** Authentication middleware, validation middleware, and error handling middleware
+- **Database:** MongoDB with Mongoose ODM, indexed queries, and schema validation
+- **Logging:** Morgan HTTP request logging with environment-aware formats
+- **Error Handling:** Centralized error handling with custom ApiError class and detailed error responses
+- **Profile & onboarding metadata:** `/api/user/profile` now surfaces the latest `monthlyBudget` and `userType`, while `/api/user/meta` lets the dashboard popup or settings screen capture those values even before the profile edit flow runs.
+- **Budget setup workflow:** Users can define a monthly budget limit (`monthlyBudget`) that is enforced whenever `/api/budgets/month` is updated. Each new month is seeded from the immediately preceding month (so deleted buckets stay deleted) and the response includes per-bucket totals plus the aggregated `allocated`, `spent`, and `remaining` numbers.
+- **Bucket editing & limits:** PUT `/api/budgets/month` accepts bucket arrays with optional IDs, preserves any prior spending totals when reallocating, rejects requests that would remove buckets which already have spending, enforces unique names, and returns a `400` if the total allocations exceed the user-configured monthly budget limit (the error message reports both totals).
 
 ## 🛠️ Technologies Used
 
--   **Runtime:** Node.js (ES Modules)
--   **Framework:** Express.js 5.x
--   **Database:** MongoDB with Mongoose 8.x ODM
--   **Authentication:** JWT (jsonwebtoken) with bcryptjs for password hashing, OAuth 2.0 (Google, Discord)
--   **Validation:** Zod 4.x for schema-based request validation
--   **Security:** Cloudflare Turnstile CAPTCHA verification
--   **Caching/Rate Limiting:** Redis with @upstash/redis and rate-limit-redis
--   **Security:** Helmet.js for security headers, express-rate-limit
--   **HTTP Client:** Axios for ML API communication
--   **Logging:** Morgan for HTTP request logging
--   **Environment:** dotenv for configuration management
--   **Dev Tools:** Nodemon for hot-reload during development
+- **Runtime:** Node.js (ES Modules)
+- **Framework:** Express.js 5.x
+- **Database:** MongoDB with Mongoose 8.x ODM
+- **Authentication:** JWT (jsonwebtoken) with bcryptjs for password hashing, OAuth 2.0 (Google, Discord)
+- **Validation:** Zod 4.x for schema-based request validation
+- **Security:** Cloudflare Turnstile CAPTCHA verification
+- **Caching/Rate Limiting:** Redis with @upstash/redis and rate-limit-redis
+- **Security:** Helmet.js for security headers, express-rate-limit
+- **HTTP Client:** Axios for ML API communication
+- **Logging:** Morgan for HTTP request logging
+- **Environment:** dotenv for configuration management
+- **Dev Tools:** Nodemon for hot-reload during development
 
 ## 📂 Project Structure
 
@@ -92,22 +92,27 @@ backend/
 
 ### Prerequisites
 
--   Node.js (v16 or later)
--   MongoDB (local or Atlas cluster)
--   Redis (Upstash or local instance)
--   npm or yarn
+- Node.js (v16 or later)
+- MongoDB (local or Atlas cluster)
+- Redis (Upstash or local instance)
+- npm or yarn
 
 ### Installation
 
-1.  Clone the repository:
+1. Clone the repository:
+
     ```sh
     git clone https://github.com/SumeetDUTTA/ExpenseKeeper.git
     ```
-2.  Navigate to the backend directory:
+
+2. Navigate to the backend directory:
+
     ```sh
     cd backend
     ```
-3.  Install dependencies:
+
+3. Install dependencies:
+
     ```sh
     npm install
     ```
@@ -154,11 +159,13 @@ ML_API_URL=http://127.0.0.1:8000
 ### Running the Application
 
 **Development mode with hot-reload:**
+
 ```sh
 npm run dev
 ```
 
 **Production mode:**
+
 ```sh
 npm start
 ```
@@ -167,46 +174,46 @@ The API server will be available at `http://localhost:5000`.
 
 ## 📜 Available Scripts
 
--   `npm run dev`: Starts the server with nodemon for automatic restarts on file changes
--   `npm start`: Starts the server in production mode (no hot-reload)
+- `npm run dev`: Starts the server with nodemon for automatic restarts on file changes
+- `npm start`: Starts the server in production mode (no hot-reload)
 
 ## 🔐 Authentication Flow
 
-1.  **Registration** (`POST /api/auth/register`):
-    -   User submits name, email, password, Turnstile CAPTCHA token
-    -   Backend verifies Turnstile token with Cloudflare API
-    -   Password hashed with bcrypt (10 salt rounds)
-    -   User document created in MongoDB with authProvider='local'
-    -   JWT token generated and returned with user info
-    -   User automatically logged in after registration
+1. **Registration** (`POST /api/auth/register`):
+    - User submits name, email, password, Turnstile CAPTCHA token
+    - Backend verifies Turnstile token with Cloudflare API
+    - Password hashed with bcrypt (10 salt rounds)
+    - User document created in MongoDB with authProvider='local'
+    - JWT token generated and returned with user info
+    - User automatically logged in after registration
 
-2.  **Login** (`POST /api/auth/login`):
-    -   User submits email, password, Turnstile CAPTCHA token
-    -   Backend verifies Turnstile token with Cloudflare API
-    -   Password verified with bcrypt.compare()
-    -   JWT token generated with 7-day expiry
-    -   Returns token and user info
+2. **Login** (`POST /api/auth/login`):
+    - User submits email, password, Turnstile CAPTCHA token
+    - Backend verifies Turnstile token with Cloudflare API
+    - Password verified with bcrypt.compare()
+    - JWT token generated with 7-day expiry
+    - Returns token and user info
 
-3.  **Google OAuth** (`POST /api/auth/google`):
-    -   User authenticates with Google Sign-In
-    -   Frontend sends Google ID token to backend
-    -   Backend verifies token with Google OAuth2 client
-    -   Creates user if not exists, or links to existing email
-    -   JWT token generated and returned
+3. **Google OAuth** (`POST /api/auth/google`):
+    - User authenticates with Google Sign-In
+    - Frontend sends Google ID token to backend
+    - Backend verifies token with Google OAuth2 client
+    - Creates user if not exists, or links to existing email
+    - JWT token generated and returned
 
-4.  **Discord OAuth** (`GET /api/auth/discord/callback`):
-    -   User redirected to Discord authorization page
-    -   Discord redirects back with authorization code
-    -   Backend exchanges code for access token
-    -   Fetches user info from Discord API
-    -   Creates user if not exists, or links to existing email
-    -   JWT token generated and user redirected to frontend
+4. **Discord OAuth** (`GET /api/auth/discord/callback`):
+    - User redirected to Discord authorization page
+    - Discord redirects back with authorization code
+    - Backend exchanges code for access token
+    - Fetches user info from Discord API
+    - Creates user if not exists, or links to existing email
+    - JWT token generated and user redirected to frontend
 
-5.  **Protected Routes**:
-    -   Client sends `Authorization: Bearer <token>` header
-    -   Auth middleware verifies token with JWT_SECRET
-    -   Decoded user info attached to `req.user`
-    -   Invalid/expired tokens return 401 Unauthorized
+5. **Protected Routes**:
+    - Client sends `Authorization: Bearer <token>` header
+    - Auth middleware verifies token with JWT_SECRET
+    - Decoded user info attached to `req.user`
+    - Invalid/expired tokens return 401 Unauthorized
 
 ## 📡 API Endpoints
 
@@ -239,10 +246,11 @@ The API server will be available at `http://localhost:5000`.
 | DELETE | `/:id`        | Delete expense by ID             | Yes |
 
 **Query Parameters for GET /api/expenses:**
--   `search` - Search in description
--   `category` - Filter by category
--   `startDate` - Filter expenses after date (ISO 8601)
--   `endDate` - Filter expenses before date (ISO 8601)
+
+- `search` - Search in description
+- `category` - Filter by category
+- `startDate` - Filter expenses after date (ISO 8601)
+- `endDate` - Filter expenses before date (ISO 8601)
 
 ### Prediction Routes (`/api/predict`)
 
@@ -251,6 +259,7 @@ The API server will be available at `http://localhost:5000`.
 | POST   | `/`        | Get ML-powered expense prediction | Yes |
 
 **Request Body:**
+
 ```json
 {
   "horizonDates": 3,
@@ -260,17 +269,19 @@ The API server will be available at `http://localhost:5000`.
 ```
 
 **Parameters:**
--   `horizonDates` (number, 1-12, default: 1) - Number of months ahead to predict
--   `user_total_budget` (number, optional, default: user's monthlyBudget) - Monthly budget amount
--   `user_type` (string, optional, default: 'college_student') - User archetype for prediction
+
+- `horizonDates` (number, 1-12, default: 1) - Number of months ahead to predict
+- `user_total_budget` (number, optional, default: user's monthlyBudget) - Monthly budget amount
+- `user_type` (string, optional, default: 'college_student') - User archetype for prediction
 
 **Available User Types:**
--   `college_student`
--   `young_professional`
--   `family_moderate`
--   `family_high`
--   `luxury_lifestyle`
--   `senior_retired`
+
+- `college_student`
+- `young_professional`
+- `family_moderate`
+- `family_high`
+- `luxury_lifestyle`
+- `senior_retired`
 
 **Response:**
 Returns category-wise expense predictions for the specified time horizon based on user's historical data and ML model forecasting.
@@ -278,6 +289,7 @@ Returns category-wise expense predictions for the specified time horizon based o
 ## 🗄️ Database Schema
 
 ### User Model
+
 ```javascript
 {
   name: String (required, trimmed),
@@ -296,9 +308,11 @@ Returns category-wise expense predictions for the specified time horizon based o
 ```
 
 **Methods:**
--   `comparePassword(candidatePassword)` - Compares plain text password with hashed password
+
+- `comparePassword(candidatePassword)` - Compares plain text password with hashed password
 
 ### Expense Model
+
 ```javascript
 {
   user: ObjectId (ref: 'User', required, indexed),
@@ -316,9 +330,11 @@ Returns category-wise expense predictions for the specified time horizon based o
 ```
 
 **Indexes:**
--   Compound index on `user` and `date` for efficient queries
+
+- Compound index on `user` and `date` for efficient queries
 
 ### Budget Model
+
 ```javascript
 {
   user: ObjectId (ref: 'User', required, indexed),
@@ -334,31 +350,33 @@ Returns category-wise expense predictions for the specified time horizon based o
   updatedAt: Date (auto)
 }
 ```
+
 **Indexes:**
--   Compound index on `user` and `month` for efficient retrieval of monthly budgets
+
+- Compound index on `user` and `month` for efficient retrieval of monthly budgets
 
 ## 🛡️ Security Features
 
--   **Helmet.js:** Sets security-related HTTP headers (XSS protection, content security policy, etc.)
--   **Rate Limiting:** Redis-backed rate limiting to prevent brute force and DoS attacks
--   **Input Validation:** Zod schemas validate all incoming requests before processing
--   **Password Hashing:** bcrypt with 10 salt rounds for secure password storage
--   **JWT Tokens:** Signed tokens with expiry, verified on each protected route
--   **CORS:** Configured whitelist of allowed origins
--   **Error Obfuscation:** Production mode hides stack traces from API responses
--   **NoSQL Injection Prevention:** Mongoose sanitizes queries automatically
+- **Helmet.js:** Sets security-related HTTP headers (XSS protection, content security policy, etc.)
+- **Rate Limiting:** Redis-backed rate limiting to prevent brute force and DoS attacks
+- **Input Validation:** Zod schemas validate all incoming requests before processing
+- **Password Hashing:** bcrypt with 10 salt rounds for secure password storage
+- **JWT Tokens:** Signed tokens with expiry, verified on each protected route
+- **CORS:** Configured whitelist of allowed origins
+- **Error Obfuscation:** Production mode hides stack traces from API responses
+- **NoSQL Injection Prevention:** Mongoose sanitizes queries automatically
 
 ## 🔧 Middleware Pipeline
 
-1.  **helmet()** → Security headers
-2.  **express.json()** → Parse JSON bodies (1MB limit)
-3.  **express.urlencoded()** → Parse URL-encoded bodies
-4.  **morgan()** → HTTP request logging
-5.  **cors()** → CORS policy enforcement
-6.  **rateLimiter** → Redis-backed rate limiting (global and auth-specific)
-7.  **validate()** → Zod schema validation (route-specific)
-8.  **auth()** → JWT verification (protected routes only)
-9.  **Controller** → Business logic execution
+1. **helmet()** → Security headers
+2. **express.json()** → Parse JSON bodies (1MB limit)
+3. **express.urlencoded()** → Parse URL-encoded bodies
+4. **morgan()** → HTTP request logging
+5. **cors()** → CORS policy enforcement
+6. **rateLimiter** → Redis-backed rate limiting (global and auth-specific)
+7. **validate()** → Zod schema validation (route-specific)
+8. **auth()** → JWT verification (protected routes only)
+9. **Controller** → Business logic execution
 10. **errorHandler()** → Centralized error response formatting
 
 ## 🧪 Error Handling
@@ -366,6 +384,7 @@ Returns category-wise expense predictions for the specified time horizon based o
 All errors are handled by the global error handler middleware:
 
 **Custom ApiError Format:**
+
 ```javascript
 class ApiError extends Error {
   constructor(statusCode, message, extra = {}) {
@@ -380,6 +399,7 @@ class ApiError extends Error {
 ```
 
 **Error Response Format:**
+
 ```json
 {
   "success": false,
@@ -389,6 +409,7 @@ class ApiError extends Error {
 ```
 
 **Example Validation Error (ZodError):**
+
 ```json
 {
   "success": false,
@@ -406,29 +427,30 @@ class ApiError extends Error {
 ```
 
 **Common Error Codes:**
--   `400` - Bad Request (validation failed)
--   `401` - Unauthorized (no/invalid token)
--   `404` - Not Found (resource doesn't exist)
--   `429` - Too Many Requests (rate limit exceeded)
--   `500` - Internal Server Error (unexpected errors)
+
+- `400` - Bad Request (validation failed)
+- `401` - Unauthorized (no/invalid token)
+- `404` - Not Found (resource doesn't exist)
+- `429` - Too Many Requests (rate limit exceeded)
+- `500` - Internal Server Error (unexpected errors)
 
 ## 🔗 ML API Integration
 
 The backend acts as a proxy to the Python ML API with enhanced error handling:
 
--   **Endpoint:** `POST /api/predict`
--   **Caching:** Redis-backed response caching (production only) to reduce ML API load and improve response times
--   **Error Handling:** Catches ML API failures, returns user-friendly errors
--   **Fallback Logic:** Uses simple averaging when insufficient data for ML predictions (< 3 months)
--   **Authentication:** User must be authenticated; user_id injected from JWT token
--   **Validation:** Request body validated with Zod schema before forwarding
--   **Smart Guardrails:** ML predictions include 15% max change constraints for fixed-cost categories (Rent, Personal Care)
+- **Endpoint:** `POST /api/predict`
+- **Caching:** Redis-backed response caching (production only) to reduce ML API load and improve response times
+- **Error Handling:** Catches ML API failures, returns user-friendly errors
+- **Fallback Logic:** Uses simple averaging when insufficient data for ML predictions (< 3 months)
+- **Authentication:** User must be authenticated; user_id injected from JWT token
+- **Validation:** Request body validated with Zod schema before forwarding
+- **Smart Guardrails:** ML predictions include 15% max change constraints for fixed-cost categories (Rent, Personal Care)
 
 ## 🧑‍💻 Author
 
--   **Sumeet Dutta** - Backend Developer
--   GitHub: [@SumeetDUTTA](https://github.com/SumeetDUTTA)
--   Project: [ExpenseKeeper](https://github.com/SumeetDUTTA/ExpenseKeeper)
+- **Sumeet Dutta** - Backend Developer
+- GitHub: [@SumeetDUTTA](https://github.com/SumeetDUTTA)
+- Project: [ExpenseKeeper](https://github.com/SumeetDUTTA/ExpenseKeeper)
 
 ## 📄 License
 
