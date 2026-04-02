@@ -184,13 +184,7 @@ class LLMAdapter:
         if not user_message:
             raise ValueError("Chat message is empty")
 
-        chat_model = normalize_model_name(settings.CHAT_MODEL)
-        if chat_model != "llama-3.1-8b-instant":
-            logger.warning(
-                "CHAT_MODEL=%s was requested, but chat is pinned to llama-3.1-8b-instant for cost control.",
-                chat_model,
-            )
-            chat_model = "llama-3.1-8b-instant"
+        chat_model = normalize_model_name(settings.CHAT_MODEL or "llama-3.1-8b-instant")
 
         system_prompt = build_chat_system_prompt(
             report_payload,
@@ -427,34 +421,33 @@ class LLMAdapter:
             )
 
         top = categories[:3]
-        suggestions = []
+        suggestions: list[tuple[str, float]] = []
 
         for item in top:
             amt = float(item.get("amount") or 0)
             if amt <= 0:
                 continue
             target_cut = max(100.0, round(amt * 0.15, 0))
-            suggestions.append(
-                f"- Cut {item.get('name', 'this category')} by about ₹{target_cut:,.0f} (15% of ₹{amt:,.0f})."
-            )
+            suggestions.append((
+                f"- Cut {item.get('name', 'this category')} by about ₹{target_cut:,.0f} (15% of ₹{amt:,.0f})",
+                target_cut
+            ))
 
         if recurring:
             r = recurring[0]
             r_amt = float(r.get("estimatedMonthlyAmount") or 0)
             if r_amt > 0:
-                suggestions.append(
-                    f"- Review recurring charge '{r.get('description', 'subscription')}' (~₹{r_amt:,.0f}/month) and try reducing at least ₹{max(100.0, round(r_amt * 0.2, 0)):,.0f}."
-                )
+                recurring_cut = max(100.0, round(r_amt * 0.2, 0))
+                suggestions.append((
+                    f"- Review recurring expenses '{r.get('description', 'subscription')}' (~₹{r_amt:,.0f}/month) and try reducing at least ₹{recurring_cut:,.0f}.",
+                    recurring_cut
+                ))
 
-        total_suggested = 0.0
-        for s in suggestions:
-            m = re.search(r"₹([0-9,]+)", s)
-            if m:
-                total_suggested += float(m.group(1).replace(",", ""))
-
+        total_suggested = sum(amount for _, amount in suggestions)
+        
         reply = (
             "To reduce your expenditure, start with your highest-spend areas rather than underused buckets:\n"
-            + "\n".join(suggestions[:4])
+            + "\n".join(text for text, _ in suggestions[:4])
             + f"\n\nThese changes can reduce around ₹{total_suggested:,.0f} this month if you hit the targets."
         )
 

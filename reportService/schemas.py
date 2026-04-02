@@ -76,14 +76,14 @@ class Metrics(BaseModel):
     periodChange: PeriodChange = Field(default_factory=PeriodChange)
     dailyAverage: float = 0.0
     transactionCount: int = 0
-    categoryBreakdown: list[CategoryItem] = []
+    categoryBreakdown: list[CategoryItem] = Field(default_factory=list)
     topSpendingCategory: str = ""
     topCategoryAmount: float = 0.0
-    budgetItems: list[BudgetItem] = []
-    noteContexts: list[NoteContext] = []
-    recurringSignals: list[RecurringSignal] = []
+    budgetItems: list[BudgetItem] = Field(default_factory=list)
+    noteContexts: list[NoteContext] = Field(default_factory=list)
+    recurringSignals: list[RecurringSignal] = Field(default_factory=list)
     recurringEstimatedTotal: float = 0.0
-    lifestyleCreepSignals: list[LifestyleCreepSignal] = []
+    lifestyleCreepSignals: list[LifestyleCreepSignal] = Field(default_factory=list)
     totalLifestyleCreepPercent: Optional[float] = None
     totalLifestyleCreepExcess: float = 0.0
 
@@ -94,8 +94,8 @@ class TrendPoint(BaseModel):
 
 
 class ChartData(BaseModel):
-    weeklyTrend: list[TrendPoint] = []
-    dailyTrend: list[TrendPoint] = []
+    weeklyTrend: list[TrendPoint] = Field(default_factory=list)
+    dailyTrend: list[TrendPoint] = Field(default_factory=list)
 
 
 class GenerateReportRequest(BaseModel):

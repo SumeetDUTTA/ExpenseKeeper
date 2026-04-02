@@ -17,6 +17,7 @@ from __future__ import annotations
 import io
 import logging
 import os
+from html import escape
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -189,7 +190,7 @@ class PDFReportGenerator:
         data = [[
             Paragraph("ExpenseKeeper", styles["brand"]),
             Paragraph(
-                f"Monthly Expense Report<br/><font size='9'>{meta.monthLabel}</font>",
+                f"Monthly Expense Report<br/><font size='9'>{escape(meta.monthLabel)}</font>",
                 styles["report_title_right"],
             ),
         ]]
@@ -207,9 +208,12 @@ class PDFReportGenerator:
         ]))
         meta_table = Table(
             [[
-                Paragraph(f"Prepared for: <b>{meta.userName}</b>", styles["sub_header"]),
-                Paragraph(f"Profile: <b>{meta.userType.replace('_', ' ').title()}</b>", styles["sub_header"]),
-                Paragraph(f"Timezone: <b>{meta.timezone}</b>", styles["sub_header"]),
+                Paragraph(f"Prepared for: <b>{escape(meta.userName)}</b>", styles["sub_header"]),
+                Paragraph(
+                    f"Profile: <b>{escape(meta.userType.replace('_', ' ').title())}</b>",
+                    styles["sub_header"],
+                ),
+                Paragraph(f"Timezone: <b>{escape(meta.timezone)}</b>", styles["sub_header"]),
                 Paragraph(f"Generated: <b>{generated}</b>", styles["sub_header_right"]),
             ]],
             colWidths=[44 * mm, 44 * mm, 44 * mm, 48 * mm],
@@ -503,7 +507,7 @@ class PDFReportGenerator:
                 Spacer(1, 1 * mm),
             ]
             for item in narrative.category_analysis:
-                block.append(Paragraph(f"- {item}", styles["body_list"]))
+                block.append(Paragraph(f"- {escape(item)}", styles["body_list"]))
             block.append(Spacer(1, 3 * mm))
             els.extend(block)
 
@@ -514,7 +518,7 @@ class PDFReportGenerator:
                 Spacer(1, 1 * mm),
             ]
             for item in narrative.anomalies:
-                block.append(Paragraph(f"Warning: {item}", styles["body_warn"]))
+                block.append(Paragraph(f"Warning: {escape(item)}", styles["body_warn"]))
             block.append(Spacer(1, 3 * mm))
             els.extend(block)
 
@@ -525,7 +529,7 @@ class PDFReportGenerator:
                 Spacer(1, 1 * mm),
             ]
             for i, item in enumerate(narrative.recommendations, 1):
-                block.append(Paragraph(f"{i}.  {item}", styles["body_list"]))
+                block.append(Paragraph(f"{i}.  {escape(item)}", styles["body_list"]))
             block.append(Spacer(1, 3 * mm))
             els.extend(block)
 
@@ -536,7 +540,7 @@ class PDFReportGenerator:
                 Spacer(1, 1 * mm),
             ]
             for item in narrative.next_month_watchouts:
-                block.append(Paragraph(f"- {item}", styles["body_list"]))
+                block.append(Paragraph(f"- {escape(item)}", styles["body_list"]))
             els.extend(block)
 
         return els

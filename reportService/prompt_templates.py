@@ -176,6 +176,10 @@ def build_user_prompt(request_data: dict) -> str:
     # Budget status
     variance = metrics.get("budgetVariance", 0)
     budget_used = metrics.get("budgetUsedPercent")
+    if budget_used is None:
+        monthly_budget = float(meta.get("monthlyBudget", 0) or 0)
+        total_spent = float(metrics.get("totalSpent", 0) or 0)
+        budget_used = (total_spent / monthly_budget * 100) if monthly_budget > 0 else 0.0
     adherence = metrics.get("budgetAdherencePercent", 0)
     budget_status = "under budget" if variance >= 0 else "over budget"
 

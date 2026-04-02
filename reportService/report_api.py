@@ -20,6 +20,7 @@ from config import settings
 from llm_adapter import LLMAdapter
 from pdf_generator import PDFReportGenerator
 from schemas import ChatRequest, ChatResponse, GenerateReportRequest, ModelInfo, NarrativeResponse
+from uuid import uuid4
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,6 +28,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 logger.info("Starting Report API — model=%s  provider=%s", settings.LLM_MODEL, settings.LLM_PROVIDER)
+
+def _raise_internal_error(log_message: str, exc: Exception) -> None:
+    request_id = uuid4().hex[:12]
+    logger.exception("%s request_id=%s error=%s", log_message, request_id, exc)
+    raise HTTPException(
+        status_code=500,
+        detail={"message": "Internal server error", "requestId": request_id},
+    ) from exc
 
 # ── App ───────────────────────────────────────────────────────────────────────
 
@@ -41,7 +50,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # tightened by the Node backend; fine for internal service
+    allow_origins=settings.CORS_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -85,8 +94,7 @@ def generate_narrative(request: GenerateReportRequest):
             generatedAt=datetime.now(timezone.utc).isoformat(),
         )
     except Exception as exc:
-        logger.exception("Narrative generation failed: %s", exc)
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        _raise_internal_error("Narrative generation failed", exc)
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -105,8 +113,8 @@ def chat(request: ChatRequest):
             generatedAt=datetime.now(timezone.utc).isoformat(),
         )
     except Exception as exc:
-        logger.exception("Chat generation failed: %s", exc)
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        _raise_internal_error("Chat generation failed", exc)
+
 
 
 @app.post("/generate-pdf")
@@ -136,8 +144,8 @@ def generate_pdf(request: GenerateReportRequest):
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
     except Exception as exc:
-        logger.exception("PDF generation failed: %s", exc)
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        _raise_internal_error("PDF generation failed", exc)
+
 
 
 # ── Dev entry-point ───────────────────────────────────────────────────────────

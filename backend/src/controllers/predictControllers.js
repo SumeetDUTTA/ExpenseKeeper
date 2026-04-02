@@ -2,13 +2,14 @@ import { forecast } from "../mlServices/mlService.js";
 import Expense from "../models/expense.js";
 import redisClient from "../utils/redisClient.js";
 import { notFound, errorHandler } from "../middleware/errorHandler.js";
+import ApiError from "../utils/ApiError.js";
 
 export async function predict(req, res, next) {
     try {
         const horizon = Number(req.body.horizonDates) || 1;
 
         if (horizon < 1 || horizon > 12) {
-            throw new errorHandler(400, 'horizonDates must be between 1 and 12');
+            throw new ApiError(400, "horizonDates must be between 1 and 12");
         }
 
         const user = req.user || {};
@@ -42,7 +43,7 @@ export async function predict(req, res, next) {
         ]);
 
         if (!rows.length) {
-            throw new errorHandler(400, 'Not enough data to generate prediction');
+            throw new ApiError(400, 'Not enough data to generate prediction');
         }
 
         // Organize data by categories and months
@@ -98,7 +99,7 @@ export async function predict(req, res, next) {
 
         // Validate result
         if (!predictionResult || !predictionResult.categories || !predictionResult.total) {
-            throw new errorHandler(500, 'Prediction failed to generate valid results');
+            throw new ApiError(500, 'Prediction failed to generate valid results');
         }
 
         // Create summary of input data
@@ -141,10 +142,7 @@ export async function predict(req, res, next) {
         res.status(200).json(result);
 
     } catch (error) {
-        console.error('Prediction error:', error);
-        if (error instanceof errorHandler) {
-            return next(error);
-        }
-        next(new errorHandler(500, 'Prediction failed', error));
+        if (error instanceof ApiError) return next(error);
+        return next(new ApiError(500, "Prediction failed"));
     }
 }

@@ -47,6 +47,12 @@ else:
 
 app = FastAPI(title="Expense Forecast API", version="2.0")
 
+allowed_origins = [
+    o.strip()
+    for o in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+    if o.strip()
+]
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,

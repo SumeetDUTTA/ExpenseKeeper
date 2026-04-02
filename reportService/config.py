@@ -38,7 +38,15 @@ class Settings:
 
     # ── Server ────────────────────────────────────────────────────────────────
     PORT: int = int(os.getenv("PORT", "8001"))
-    HOST: str = os.getenv("HOST", "0.0.0.0")
+    # CORS origins for frontend access (comma-separated).
+    CORS_ALLOWED_ORIGINS: list[str] = [
+        o.strip()
+        for o in os.getenv(
+            "CORS_ALLOWED_ORIGINS",
+            "http://localhost:3000,http://localhost:5173",
+        ).split(",")
+        if o.strip()
+    ]
 
     # ── Generation ────────────────────────────────────────────────────────────
     # Maximum tokens the LLM is allowed to produce.
