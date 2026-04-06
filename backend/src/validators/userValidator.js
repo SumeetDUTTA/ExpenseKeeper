@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const updateUserSchema = z.object({
     body: z.object({
         name: z.string().min(1, 'Name must be a non-empty string').optional(),
-        email: z.string().email({ message: 'Invalid email format' }).optional(),
+        email: z.email({ message: 'Invalid email format' }).optional(),
         currentPassword: z.string().optional(),
         password: z.string()
             .min(6, 'New password must be at least 6 characters')
