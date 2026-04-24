@@ -15,6 +15,11 @@ export default defineConfig(() => ({
         changeOrigin: true,
         secure: false,
       },
+      "/ml": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 }));

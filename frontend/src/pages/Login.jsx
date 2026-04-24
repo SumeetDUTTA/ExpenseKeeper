@@ -127,13 +127,20 @@ export default function Login() {
 
 	// Check if backend server is awake on component mount
 	useEffect(() => {
+		const ML_HEALTH_TTL = 5 * 60 * 1000; // 5 minutes
+		const cachedMlAt = sessionStorage.getItem('mlHealthCheckedAt');
+		if (cachedMlAt && Date.now() - Number(cachedMlAt) < ML_HEALTH_TTL) {
+			setMlServerAwake(true);
+			setMlServerChecking(false);
+			return;
+		}
+
 		async function checkMLServerHealth() {
 			try {
 				const controller = new AbortController();
 				const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for ML server
 
-				const mlApiUrl = import.meta.env.VITE_ML_API_URL || "http://localhost:8000";
-				const response = await fetch(`${mlApiUrl}/docs`, {
+				const response = await fetch('/ml/docs', {
 					method: 'GET',
 					signal: controller.signal
 				});
@@ -142,6 +149,7 @@ export default function Login() {
 
 				if (response.ok) {
 					setMlServerAwake(true);
+					sessionStorage.setItem('mlHealthCheckedAt', String(Date.now()));
 				} else {
 					throw new Error('ML server not responding');
 				}
@@ -160,10 +168,19 @@ export default function Login() {
 				// Retry after 45 seconds
 				setTimeout(async () => {
 					try {
-						const mlApiUrl = import.meta.env.VITE_ML_API_URL || "http://localhost:8000";
-						const retryResponse = await fetch(`${mlApiUrl}/docs`);
+						const retryController = new AbortController();
+						const retryTimeoutId = setTimeout(() => retryController.abort(), 8000); // 8s timeout
+
+						const retryResponse = await fetch('/ml/docs', {
+							method: 'GET',
+							signal: retryController.signal
+						});
+
+						clearTimeout(retryTimeoutId);
+
 						if (retryResponse.ok) {
 							setMlServerAwake(true);
+							sessionStorage.setItem('mlHealthCheckedAt', String(Date.now()));
 							toast.dismiss('ml-server-wake-toast');
 							toast.success('ML server is ready! You can now generate predictions.');
 						} else {
@@ -184,6 +201,13 @@ export default function Login() {
 	}, []);
 
 	useEffect(() => {
+		const BACKEND_HEALTH_TTL = 5 * 60 * 1000; // 5 minutes
+		const cachedBackendAt = sessionStorage.getItem('backendHealthCheckedAt');
+		if (cachedBackendAt && Date.now() - Number(cachedBackendAt) < BACKEND_HEALTH_TTL) {
+			setServerAwake(true);
+			setServerChecking(false);
+			return;
+		}
 
 		async function checkServerHealth() {
 			try {
@@ -199,6 +223,7 @@ export default function Login() {
 
 				if (response.ok) {
 					setServerAwake(true);
+					sessionStorage.setItem('backendHealthCheckedAt', String(Date.now()));
 				} else {
 					throw new Error('Server not responding');
 				}
@@ -229,6 +254,7 @@ export default function Login() {
 
 						if (retryResponse.ok) {
 							setServerAwake(true);
+							sessionStorage.setItem('backendHealthCheckedAt', String(Date.now()));
 							toast.dismiss('server-wake-toast');
 							toast.success('Server is ready! You can now login or signup.');
 						} else {

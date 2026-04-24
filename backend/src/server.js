@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
+import axios from 'axios';
 
 import expenseRoutes from './routes/expenseRoutes.js';
 import authRoutes from './routes/authRoutes.js';
@@ -132,6 +133,17 @@ const authLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 5,
   message: { error: 'Too many login attempts. Please try again later.' }
+});
+
+app.get('/ml/docs', async (req, res) => {
+  try {
+    const mlBase = (process.env.ML_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+    const mlRes = await axios.get(`${mlBase}/docs`, { timeout: 8000 });
+    res.status(mlRes.status).json({ status: 'ok' });
+  } catch (err) {
+    const status = err.response?.status || 503;
+    res.status(status).json({ status: 'error', error: err.message });
+  }
 });
 
 app.get('/health', async (req, res) => {
