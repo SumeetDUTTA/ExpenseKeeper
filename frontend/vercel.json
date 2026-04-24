@@ -41,6 +41,10 @@
 
   "rewrites": [
     {
+      "source": "/health",
+      "destination": "https://expense-keeper-backend.onrender.com/health"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "https://expense-keeper-backend.onrender.com/api/$1"
     },
