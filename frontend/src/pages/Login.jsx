@@ -190,7 +190,7 @@ export default function Login() {
 				const controller = new AbortController();
 				const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
-				const response = await fetch(`${import.meta.env.VITE_API_TARGET || "http://localhost:5000"}/health`, {
+				const response = await fetch(`/health`, {
 					method: 'GET',
 					signal: controller.signal
 				});
@@ -217,7 +217,7 @@ export default function Login() {
 				// Retry after 30 seconds
 				setTimeout(async () => {
 					try {
-						const retryResponse = await fetch(`${import.meta.env.VITE_API_TARGET || "http://localhost:5000"}/health`);
+						const retryResponse = await fetch(`/health`);
 						if (retryResponse.ok) {
 							setServerAwake(true);
 							toast.dismiss('server-wake-toast');
