@@ -15,9 +15,16 @@ export default function HomePage() {
 
   // Wake up backend server on Render
   React.useEffect(() => {
+    const BACKEND_HEALTH_TTL = 5 * 60 * 1000; // 5 minutes
+    const cachedBackendAt = sessionStorage.getItem('backendHealthCheckedAt');
+    if (cachedBackendAt && Date.now() - Number(cachedBackendAt) < BACKEND_HEALTH_TTL) {
+      return;
+    }
+
     const wakeBackend = async () => {
       try {
         await axios.get(`/health`, { timeout: 60000 });
+        sessionStorage.setItem('backendHealthCheckedAt', String(Date.now()));
         console.log('Backend server wake ping sent OK');
       } catch (error) {
         console.debug('Backend wake ping failed (ignored):', error.message);

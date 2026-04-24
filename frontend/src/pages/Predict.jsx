@@ -44,13 +44,20 @@ export default function Predict() {
 
 	// Check if ML server is awake on component mount
 	React.useEffect(() => {
+		const ML_HEALTH_TTL = 5 * 60 * 1000; // 5 minutes
+		const cachedMlAt = sessionStorage.getItem('mlHealthCheckedAt');
+		if (cachedMlAt && Date.now() - Number(cachedMlAt) < ML_HEALTH_TTL) {
+			setMlServerAwake(true);
+			setMlServerChecking(false);
+			return;
+		}
+
 		async function checkMLServerHealth() {
 			try {
 				const controller = new AbortController();
 				const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for ML server
 
-				const mlApiUrl = import.meta.env.VITE_ML_API_URL || "http://localhost:8000";
-				const response = await fetch(`${mlApiUrl}/docs`, {
+				const response = await fetch('/ml/docs', {
 					method: 'GET',
 					signal: controller.signal
 				});
@@ -59,6 +66,7 @@ export default function Predict() {
 
 				if (response.ok) {
 					setMlServerAwake(true);
+					sessionStorage.setItem('mlHealthCheckedAt', String(Date.now()));
 					toast.success('ML server is ready! You can now generate predictions.');
 				} else {
 					toast.error('ML server not responding. Please try again later.');
@@ -79,10 +87,19 @@ export default function Predict() {
 				// Retry after 45 seconds
 				setTimeout(async () => {
 					try {
-						const mlApiUrl = import.meta.env.VITE_ML_API_URL || "http://localhost:8000";
-						const retryResponse = await fetch(`${mlApiUrl}/docs`);
+						const retryController = new AbortController();
+						const retryTimeoutId = setTimeout(() => retryController.abort(), 8000); // 8s timeout
+
+						const retryResponse = await fetch('/ml/docs', {
+							method: 'GET',
+							signal: retryController.signal
+						});
+
+						clearTimeout(retryTimeoutId);
+
 						if (retryResponse.ok) {
 							setMlServerAwake(true);
+							sessionStorage.setItem('mlHealthCheckedAt', String(Date.now()));
 							toast.dismiss('ml-server-wake-toast');
 							toast.success('ML server is ready! You can now generate predictions.');
 						} else {

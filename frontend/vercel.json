@@ -45,6 +45,10 @@
       "destination": "https://expense-keeper-backend.onrender.com/health"
     },
     {
+      "source": "/ml/docs",
+      "destination": "https://expense-keeper-backend.onrender.com/ml/docs"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "https://expense-keeper-backend.onrender.com/api/$1"
     },
