@@ -135,7 +135,7 @@ const authLimiter = rateLimit({
   message: { error: 'Too many login attempts. Please try again later.' }
 });
 
-app.get('/ml/docs', async (req, res) => {
+app.get('/ml/docs', limiter, async (req, res) => {
   try {
     const mlBase = (process.env.ML_API_URL || 'http://localhost:8000').replace(/\/$/, '');
     const mlRes = await axios.get(`${mlBase}/docs`, { timeout: 8000 });
