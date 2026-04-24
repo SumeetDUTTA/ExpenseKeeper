@@ -7,6 +7,16 @@ import emailjs from '@emailjs/browser';
 import { useAuth } from '../contexts/authContext';
 import '../styles/homePage.css';
 
+/**
+ * Render the homepage marketing layout with features, tech info, and a contact form.
+ *
+ * On mount, performs a background health ping to `/health` to wake the backend and,
+ * if the user is authenticated, navigates to `/dashboard`. Exposes a contact form
+ * that sends messages via EmailJS and displays success/error toasts; form inputs
+ * and submission are disabled while a message is being sent.
+ *
+ * @returns {JSX.Element} The rendered homepage component.
+ */
 export default function HomePage() {
   const { token } = useAuth();
   const navigate = useNavigate();

@@ -25,6 +25,12 @@ import "../styles/LoginSignup.css";
 
 const BACKEND_PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
 
+/**
+ * Render the combined sign-up / login screen with email/password form, Google and Discord OAuth, optional Turnstile CAPTCHA, live password-rule checklist, and backend + ML server readiness gating.
+ *
+ * The component manages local form and UI state, initializes Google redirect-based OAuth, handles OAuth redirect codes, checks server and ML health with retry-toasting, validates input according to backend password rules, and submits signup/login requests (including CAPTCHA token).
+ * @returns {JSX.Element} The rendered login/signup screen.
+ */
 export default function Login() {
 	const { login, register, loginWithGoogle, loginWithDiscord } = useAuth();
 	const nav = useNavigate();
