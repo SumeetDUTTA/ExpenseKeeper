@@ -217,7 +217,16 @@ export default function Login() {
 				// Retry after 30 seconds
 				setTimeout(async () => {
 					try {
-						const retryResponse = await fetch(`/health`);
+						const retryController = new AbortController();
+						const retryTimeoutId = setTimeout(() => retryController.abort(), 5000); // 5s timeout
+
+						const retryResponse = await fetch(`/health`, {
+							method: 'GET',
+							signal: retryController.signal
+						});
+
+						clearTimeout(retryTimeoutId);
+
 						if (retryResponse.ok) {
 							setServerAwake(true);
 							toast.dismiss('server-wake-toast');
