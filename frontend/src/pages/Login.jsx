@@ -138,7 +138,7 @@ export default function Login() {
 		async function checkMLServerHealth() {
 			try {
 				const controller = new AbortController();
-				const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for ML server
+				const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout for ML server
 
 				const response = await fetch('/ml/docs', {
 					method: 'GET',
@@ -169,7 +169,7 @@ export default function Login() {
 				setTimeout(async () => {
 					try {
 						const retryController = new AbortController();
-						const retryTimeoutId = setTimeout(() => retryController.abort(), 8000); // 8s timeout
+						const retryTimeoutId = setTimeout(() => retryController.abort(), 15000); // 15s timeout
 
 						const retryResponse = await fetch('/ml/docs', {
 							method: 'GET',
@@ -212,7 +212,7 @@ export default function Login() {
 		async function checkServerHealth() {
 			try {
 				const controller = new AbortController();
-				const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+				const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
 				const response = await fetch(`/health`, {
 					method: 'GET',
@@ -243,7 +243,7 @@ export default function Login() {
 				setTimeout(async () => {
 					try {
 						const retryController = new AbortController();
-						const retryTimeoutId = setTimeout(() => retryController.abort(), 5000); // 5s timeout
+						const retryTimeoutId = setTimeout(() => retryController.abort(), 15000); // 15s timeout
 
 						const retryResponse = await fetch(`/health`, {
 							method: 'GET',
