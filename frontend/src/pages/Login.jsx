@@ -140,12 +140,15 @@ export default function Login() {
 				const controller = new AbortController();
 				const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout for ML server
 
-				const response = await fetch('/ml/docs', {
-					method: 'GET',
-					signal: controller.signal
-				});
-
-				clearTimeout(timeoutId);
+				let response;
+				try {
+					response = await fetch('/ml/docs', {
+						method: 'GET',
+						signal: controller.signal
+					});
+				} finally {
+					clearTimeout(timeoutId);
+				}
 
 				if (response.ok) {
 					setMlServerAwake(true);
@@ -171,12 +174,15 @@ export default function Login() {
 						const retryController = new AbortController();
 						const retryTimeoutId = setTimeout(() => retryController.abort(), 15000); // 15s timeout
 
-						const retryResponse = await fetch('/ml/docs', {
-							method: 'GET',
-							signal: retryController.signal
-						});
-
-						clearTimeout(retryTimeoutId);
+						let retryResponse;
+						try {
+							retryResponse = await fetch('/ml/docs', {
+								method: 'GET',
+								signal: retryController.signal
+							});
+						} finally {
+							clearTimeout(retryTimeoutId);
+						}
 
 						if (retryResponse.ok) {
 							setMlServerAwake(true);
@@ -214,12 +220,15 @@ export default function Login() {
 				const controller = new AbortController();
 				const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
-				const response = await fetch(`/health`, {
-					method: 'GET',
-					signal: controller.signal
-				});
-
-				clearTimeout(timeoutId);
+				let response;
+				try {
+					response = await fetch(`/health`, {
+						method: 'GET',
+						signal: controller.signal
+					});
+				} finally {
+					clearTimeout(timeoutId);
+				}
 
 				if (response.ok) {
 					setServerAwake(true);
@@ -245,12 +254,15 @@ export default function Login() {
 						const retryController = new AbortController();
 						const retryTimeoutId = setTimeout(() => retryController.abort(), 15000); // 15s timeout
 
-						const retryResponse = await fetch(`/health`, {
-							method: 'GET',
-							signal: retryController.signal
-						});
-
-						clearTimeout(retryTimeoutId);
+						let retryResponse;
+						try {
+							retryResponse = await fetch(`/health`, {
+								method: 'GET',
+								signal: retryController.signal
+							});
+						} finally {
+							clearTimeout(retryTimeoutId);
+						}
 
 						if (retryResponse.ok) {
 							setServerAwake(true);

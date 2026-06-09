@@ -93,12 +93,15 @@ export default function Predict() {
 						const retryController = new AbortController();
 						const retryTimeoutId = setTimeout(() => retryController.abort(), 15000); // 15s timeout
 
-						const retryResponse = await fetch('/ml/docs', {
-							method: 'GET',
-							signal: retryController.signal
-						});
-
-						clearTimeout(retryTimeoutId);
+						let retryResponse;
+						try {
+							retryResponse = await fetch('/ml/docs', {
+								method: 'GET',
+								signal: retryController.signal
+							});
+						} finally {
+							clearTimeout(retryTimeoutId);
+						}
 
 						if (retryResponse.ok) {
 							setMlServerAwake(true);
