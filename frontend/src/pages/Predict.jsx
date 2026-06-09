@@ -57,12 +57,15 @@ export default function Predict() {
 				const controller = new AbortController();
 				const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout for ML server
 
-				const response = await fetch('/ml/docs', {
-					method: 'GET',
-					signal: controller.signal
-				});
-
-				clearTimeout(timeoutId);
+				let response;
+				try {
+					response = await fetch('/ml/docs', {
+						method: 'GET',
+						signal: controller.signal
+					});
+				} finally {
+					clearTimeout(timeoutId);
+				}
 
 				if (response.ok) {
 					setMlServerAwake(true);
