@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { TrendingUp, Calendar, DollarSign, BarChart3, Eye, EyeOff, Sparkles, LoaderCircle } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
 import toast from "react-hot-toast";
@@ -34,6 +34,8 @@ function normalizeTotalPrediction(tp) {
 }
 
 export default function Predict() {
+	const ML_HEALTH_TIMEOUT_MS = 15000
+	const ML_HEALTH_RETRY_DELAY_MS = 45000
 	const [horizon, setHorizon] = useState(3)
 	const [result, setResult] = useState(null)
 	const [loading, setLoading] = useState(false)
@@ -41,9 +43,13 @@ export default function Predict() {
 	const [showBreakdown, setShowBreakdown] = useState(false)
 	const [mlServerChecking, setMlServerChecking] = useState(true)
 	const [mlServerAwake, setMlServerAwake] = useState(false)
+	const mlHealthRetryTimerRef = useRef(null)
+	const mlHealthAbortTimerRef = useRef(null)
+	const mlHealthControllerRef = useRef(null)
 
 	// Check if ML server is awake on component mount
 	React.useEffect(() => {
+		let isActive = true
 		const ML_HEALTH_TTL = 5 * 60 * 1000; // 5 minutes
 		const cachedMlAt = sessionStorage.getItem('mlHealthCheckedAt');
 		if (cachedMlAt && Date.now() - Number(cachedMlAt) < ML_HEALTH_TTL) {
@@ -54,15 +60,21 @@ export default function Predict() {
 
 		async function checkMLServerHealth() {
 			try {
-				const controller = new AbortController();
-				const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for ML server
+				mlHealthControllerRef.current = new AbortController();
+				mlHealthAbortTimerRef.current = setTimeout(
+					() => mlHealthControllerRef.current?.abort(),
+					ML_HEALTH_TIMEOUT_MS
+				);
 
 				const response = await fetch('/ml/docs', {
 					method: 'GET',
-					signal: controller.signal
+					signal: mlHealthControllerRef.current.signal
 				});
 
-				clearTimeout(timeoutId);
+				clearTimeout(mlHealthAbortTimerRef.current);
+				mlHealthAbortTimerRef.current = null;
+				mlHealthControllerRef.current = null;
+				if (!isActive) return;
 
 				if (response.ok) {
 					setMlServerAwake(true);
@@ -73,6 +85,10 @@ export default function Predict() {
 					throw new Error('ML server not responding');
 				}
 			} catch (err) {
+				clearTimeout(mlHealthAbortTimerRef.current);
+				mlHealthAbortTimerRef.current = null;
+				mlHealthControllerRef.current = null;
+				if (!isActive) return;
 				// ML server is sleeping or unreachable
 				setMlServerAwake(false);
 				toast.loading(
@@ -85,17 +101,23 @@ export default function Predict() {
 				);
 
 				// Retry after 45 seconds
-				setTimeout(async () => {
+				mlHealthRetryTimerRef.current = setTimeout(async () => {
 					try {
-						const retryController = new AbortController();
-						const retryTimeoutId = setTimeout(() => retryController.abort(), 8000); // 8s timeout
+						mlHealthControllerRef.current = new AbortController();
+						mlHealthAbortTimerRef.current = setTimeout(
+							() => mlHealthControllerRef.current?.abort(),
+							ML_HEALTH_TIMEOUT_MS
+						);
 
 						const retryResponse = await fetch('/ml/docs', {
 							method: 'GET',
-							signal: retryController.signal
+							signal: mlHealthControllerRef.current.signal
 						});
 
-						clearTimeout(retryTimeoutId);
+						clearTimeout(mlHealthAbortTimerRef.current);
+						mlHealthAbortTimerRef.current = null;
+						mlHealthControllerRef.current = null;
+						if (!isActive) return;
 
 						if (retryResponse.ok) {
 							setMlServerAwake(true);
@@ -107,16 +129,26 @@ export default function Predict() {
 							toast.error('ML server is still starting. Please wait a bit longer and refresh.');
 						}
 					} catch {
+						if (!isActive) return;
 						toast.dismiss('ml-server-wake-toast');
 						toast.error('Unable to reach ML server. Please check your connection or try again later.');
 					}
-				}, 45000);
+				}, ML_HEALTH_RETRY_DELAY_MS);
 			} finally {
-				setMlServerChecking(false);
+				if (isActive) {
+					setMlServerChecking(false);
+				}
 			}
 		}
 
 		checkMLServerHealth();
+
+		return () => {
+			isActive = false
+			clearTimeout(mlHealthRetryTimerRef.current)
+			clearTimeout(mlHealthAbortTimerRef.current)
+			mlHealthControllerRef.current?.abort()
+		}
 	}, []);
 
 	async function submit(e) {

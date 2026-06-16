@@ -138,7 +138,7 @@ const authLimiter = rateLimit({
 app.get('/ml/docs', limiter, async (req, res) => {
   try {
     const mlBase = (process.env.ML_API_URL || 'http://localhost:8000').replace(/\/$/, '');
-    const mlRes = await axios.get(`${mlBase}/docs`, { timeout: 8000 });
+    const mlRes = await axios.get(`${mlBase}/docs`, { timeout: 15000 });
     res.status(mlRes.status).json({ status: 'ok' });
   } catch (err) {
     const status = err.response?.status || 503;

@@ -26,6 +26,8 @@ import "../styles/LoginSignup.css";
 const BACKEND_PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
 
 export default function Login() {
+	const ML_HEALTH_TIMEOUT_MS = 15000;
+	const ML_HEALTH_RETRY_DELAY_MS = 45000;
 	const { login, register, loginWithGoogle, loginWithDiscord } = useAuth();
 	const nav = useNavigate();
 	const location = useLocation();
@@ -44,6 +46,9 @@ export default function Login() {
 	const [googleReady, setGoogleReady] = useState(false);
 	const [turnstileToken, setTurnstileToken] = useState('');
 	const processedGoogleCodeRef = useRef(null);
+	const mlHealthRetryTimerRef = useRef(null);
+	const mlHealthAbortTimerRef = useRef(null);
+	const mlHealthControllerRef = useRef(null);
 
 	const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 	const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
@@ -127,6 +132,7 @@ export default function Login() {
 
 	// Check if backend server is awake on component mount
 	useEffect(() => {
+		let isActive = true;
 		const ML_HEALTH_TTL = 5 * 60 * 1000; // 5 minutes
 		const cachedMlAt = sessionStorage.getItem('mlHealthCheckedAt');
 		if (cachedMlAt && Date.now() - Number(cachedMlAt) < ML_HEALTH_TTL) {
@@ -137,15 +143,21 @@ export default function Login() {
 
 		async function checkMLServerHealth() {
 			try {
-				const controller = new AbortController();
-				const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for ML server
+				mlHealthControllerRef.current = new AbortController();
+				mlHealthAbortTimerRef.current = setTimeout(
+					() => mlHealthControllerRef.current?.abort(),
+					ML_HEALTH_TIMEOUT_MS
+				);
 
 				const response = await fetch('/ml/docs', {
 					method: 'GET',
-					signal: controller.signal
+					signal: mlHealthControllerRef.current.signal
 				});
 
-				clearTimeout(timeoutId);
+				clearTimeout(mlHealthAbortTimerRef.current);
+				mlHealthAbortTimerRef.current = null;
+				mlHealthControllerRef.current = null;
+				if (!isActive) return;
 
 				if (response.ok) {
 					setMlServerAwake(true);
@@ -154,6 +166,10 @@ export default function Login() {
 					throw new Error('ML server not responding');
 				}
 			} catch (err) {
+				clearTimeout(mlHealthAbortTimerRef.current);
+				mlHealthAbortTimerRef.current = null;
+				mlHealthControllerRef.current = null;
+				if (!isActive) return;
 				// ML server is sleeping or unreachable
 				setMlServerAwake(false);
 				toast.loading(
@@ -166,17 +182,23 @@ export default function Login() {
 				);
 
 				// Retry after 45 seconds
-				setTimeout(async () => {
+				mlHealthRetryTimerRef.current = setTimeout(async () => {
 					try {
-						const retryController = new AbortController();
-						const retryTimeoutId = setTimeout(() => retryController.abort(), 8000); // 8s timeout
+						mlHealthControllerRef.current = new AbortController();
+						mlHealthAbortTimerRef.current = setTimeout(
+							() => mlHealthControllerRef.current?.abort(),
+							ML_HEALTH_TIMEOUT_MS
+						);
 
 						const retryResponse = await fetch('/ml/docs', {
 							method: 'GET',
-							signal: retryController.signal
+							signal: mlHealthControllerRef.current.signal
 						});
 
-						clearTimeout(retryTimeoutId);
+						clearTimeout(mlHealthAbortTimerRef.current);
+						mlHealthAbortTimerRef.current = null;
+						mlHealthControllerRef.current = null;
+						if (!isActive) return;
 
 						if (retryResponse.ok) {
 							setMlServerAwake(true);
@@ -188,16 +210,26 @@ export default function Login() {
 							toast.error('ML server is still starting. Please wait a bit longer and refresh.');
 						}
 					} catch {
+						if (!isActive) return;
 						toast.dismiss('ml-server-wake-toast');
 						toast.error('Unable to reach ML server. Please check your connection or try again later.');
 					}
-				}, 45000);
+				}, ML_HEALTH_RETRY_DELAY_MS);
 			} finally {
-				setMlServerChecking(false);
+				if (isActive) {
+					setMlServerChecking(false);
+				}
 			}
 		}
 
 		checkMLServerHealth();
+
+		return () => {
+			isActive = false;
+			clearTimeout(mlHealthRetryTimerRef.current);
+			clearTimeout(mlHealthAbortTimerRef.current);
+			mlHealthControllerRef.current?.abort();
+		};
 	}, []);
 
 	useEffect(() => {
